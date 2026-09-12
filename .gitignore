@@ -1,2 +1,17 @@
+# Dependencies and build output
+/node_modules/
+/dist/
+/coverage/
+*.tsbuildinfo
+
+# Local environment
+.env
+.env.*
+!.env.example
+
 # Local input examples may contain personal data.
 /tmp/
+
+# Editor and OS files
+.DS_Store
+*.swp
