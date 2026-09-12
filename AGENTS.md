@@ -10,6 +10,8 @@
 
 - React + TypeScript + Vite.
 - Static PWA deployed under `/lsd/` on GitHub Pages.
+- The interface supports French (default), English, Italian and German through `src/i18n.ts`.
+- Keep every user-facing string, date and generated ICS label localized; persist the explicit language choice locally.
 - PDF parsing runs locally in the browser with PDF.js and deterministic rules.
 - Persist schedules locally in IndexedDB.
 - Generate ICS exports in the browser using timezone `Europe/Zurich`.
@@ -29,4 +31,5 @@
 - Cover parsing, time normalization, schedule merging and ICS generation with unit tests.
 - Use semantic HTML and labelled icon buttons; never encode status by colour alone.
 - Preserve correct next-day semantics for operational times such as `25:31`.
+- Add or update translations in all four dictionaries whenever UI copy changes.
 - Run `npm test`, `npm run typecheck` and `npm run build` before pushing.

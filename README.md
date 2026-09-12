@@ -47,9 +47,11 @@ The directory is ignored by Git. Never copy real PDF contents or derived persona
 
 ## Implemented workflow
 
-The French interface supports local PDF import, editable validation, a monthly calendar,
-focused day navigation, persistent IndexedDB storage, period merging/replacement and
-Zurich-timezone ICS export. Presence stations are kept separate from trip stations.
+The interface supports French (default), English, Italian and German, with a locally
+persisted language choice, localized dates, validation feedback and ICS content. It
+supports local PDF import, editable validation, a monthly calendar, focused day
+navigation, persistent IndexedDB storage, period merging/replacement and Zurich-timezone
+ICS export. Presence stations are kept separate from trip stations.
 Operational hours such as `25:31` remain on the following day throughout the workflow.
 Split services export one event per block, each with a two-hour reminder. Calendar
 imports are snapshots; replacing an old export is the calendar user's responsibility.

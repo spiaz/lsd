@@ -2,9 +2,11 @@ import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist/legacy/build/pdf.mj
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import type { ParseResult } from '../domain/schedule';
 import { parsePdfItems, type PdfPage } from './parse-items';
+import { translator, type Locale } from '../i18n';
 GlobalWorkerOptions.workerSrc = workerUrl;
-export async function parseSchedulePdf(file: File): Promise<ParseResult> {
-  if (file.size > 25 * 1024 * 1024) return { issues: [{ severity: 'error', code: 'SIZE', message: 'Le PDF dépasse la limite de 25 Mo.' }] };
+export async function parseSchedulePdf(file: File, locale: Locale = 'fr'): Promise<ParseResult> {
+  const t = translator(locale);
+  if (file.size > 25 * 1024 * 1024) return { issues: [{ severity: 'error', code: 'SIZE', message: t('parser.size') }] };
   let task: ReturnType<typeof getDocument> | undefined;
   let stage = 'FILE';
   try {
@@ -12,7 +14,7 @@ export async function parseSchedulePdf(file: File): Promise<ParseResult> {
     stage = 'PDF';
     task = getDocument({ data, verbosity: 0 });
     const pdf = await task.promise;
-    if (pdf.numPages > 100) return { issues: [{ severity: 'error', code: 'PAGES', message: 'Le PDF dépasse la limite de 100 pages.' }] };
+    if (pdf.numPages > 100) return { issues: [{ severity: 'error', code: 'PAGES', message: t('parser.pages') }] };
     const pages: PdfPage[] = [];
     for (let number = 1; number <= pdf.numPages; number++) {
       const page = await pdf.getPage(number), content = await page.getTextContent();
@@ -20,17 +22,17 @@ export async function parseSchedulePdf(file: File): Promise<ParseResult> {
       page.cleanup();
     }
     stage = 'PARSER';
-    return parsePdfItems(pages, file.name);
+    return parsePdfItems(pages, file.name, locale);
   } catch (error) {
     // Never expose exception messages: they can contain source document data.
     const name = error && typeof error === 'object' && 'name' in error ? error.name : '';
     const code = name === 'PasswordException' ? 'PASSWORD' : name === 'InvalidPDFException' ? 'INVALID_PDF' : stage;
     const messages: Record<string, string> = {
-      PASSWORD: 'Ce PDF est protégé par un mot de passe. Utilisez une copie non protégée.',
-      INVALID_PDF: 'Le fichier ne contient pas un PDF valide. Téléchargez à nouveau le document.',
-      FILE: 'Impossible de lire le fichier sur cet appareil. Téléchargez-le localement puis réessayez.',
-      PARSER: 'Le planning n’a pas pu être analysé. Réessayez après avoir rechargé l’application. Code : PARSER.',
-      PDF: 'Le moteur PDF n’a pas pu lire le document. Fermez puis rouvrez LSD avec une connexion et réessayez. Code : PDF.',
+      PASSWORD: t('parser.password'),
+      INVALID_PDF: t('parser.invalidPdf'),
+      FILE: t('parser.file'),
+      PARSER: t('parser.parser'),
+      PDF: t('parser.pdf'),
     };
     return { issues: [{ severity: 'error', code, message: messages[code] }] };
   } finally { await task?.destroy().catch(() => { /* Cleanup must not hide the import result. */ }); }

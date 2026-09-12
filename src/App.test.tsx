@@ -20,4 +20,11 @@ describe('planning user flow', () => {
   it('keeps the preview and current planning when saving fails', async () => { vi.mocked(saveSchedule).mockRejectedValue(new Error()); await render(); await upload(); await click('Enregistrer le planning'); expect(container.textContent).toContain('Échec de l’enregistrement'); expect(container.textContent).toContain('Vérifiez le planning'); });
   it('blocks saving an unresolved parser warning until explicitly reviewed', async () => { vi.mocked(parseSchedulePdf).mockResolvedValue({ schedule: sampleSchedule(), issues: [{ severity: 'warning', code: 'STATUS', date: '2026-10-03', message: 'Vérifiez le code' }] }); await render(); await upload(); const save = [...container.querySelectorAll('button')].find(b => b.textContent?.includes('Enregistrer le planning'))!; expect(save.disabled).toBe(true); await act(async () => container.querySelector<HTMLInputElement>('input[type=checkbox]')!.click()); expect(save.disabled).toBe(false); });
   it('blocks overwriting a saved overlap with add mode', async () => { vi.mocked(listSchedules).mockResolvedValue([sampleSchedule()]); await render(); await upload(); await click('Enregistrer le planning'); expect(container.textContent).toContain('chevauche'); expect(saveSchedule).not.toHaveBeenCalled(); });
+  it('uses French by default and switches the full interface to Italian', async () => {
+    await render();
+    const language = container.querySelector<HTMLSelectElement>('select[aria-label="Langue"]')!;
+    expect(language.value).toBe('fr'); expect(document.documentElement.lang).toBe('fr');
+    await act(async () => { language.value = 'it'; language.dispatchEvent(new Event('change', { bubbles: true })); });
+    expect(container.textContent).toContain('Importa il PDF dei tuoi turni'); expect(document.documentElement.lang).toBe('it'); expect(localStorage.setItem).toHaveBeenCalledWith('lsd-locale', 'it');
+  });
 });

@@ -21,6 +21,3 @@ export interface ParseIssue {
   severity: 'warning' | 'error'; code: string; message: string; sourceReference?: string; date?: string;
 }
 export interface ParseResult { schedule?: Schedule; issues: ParseIssue[] }
-export const statusLabels: Record<DayStatus, string> = {
-  work: 'Travail', rest: 'Repos', absence: 'Congé / absence', holiday: 'Vacances / jour férié', 'compensatory-rest': 'Repos compensatoire',
-};

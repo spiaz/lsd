@@ -19,6 +19,7 @@ export function addDays(value: string, days: number) {
   const d = new Date(`${value}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10);
 }
 export function todayDate() { return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Zurich' }).format(new Date()); }
-export function formatDate(date: string, options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' }) {
-  return validDate(date) ? new Intl.DateTimeFormat('fr-CH', { ...options, timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`)) : date;
+export function formatDate(date: string, options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' }, locale: Locale = 'fr') {
+  return validDate(date) ? new Intl.DateTimeFormat(intlLocales[locale], { ...options, timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`)) : date;
 }
+import { intlLocales, type Locale } from '../i18n';

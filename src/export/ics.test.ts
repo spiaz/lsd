@@ -10,4 +10,5 @@ describe('ICS export', () => {
   it('keeps event identity stable across revisions', () => { const s = sampleSchedule(); const old = scheduleIcsText(s); s.days[0].shift!.origin = 'Nuovo'; expect(scheduleIcsText(s).match(/UID:.*/g)).toEqual(old.match(/UID:.*/g)); });
   it('handles month and year rollover', () => { const s = sampleSchedule(); s.days = [s.days[0]]; s.days[0].date = s.metadata.coverageStart = s.metadata.coverageEnd = '2026-12-31'; expect(scheduleIcsText(s)).toContain('DTEND;TZID=Europe/Zurich:20270101T013100'); });
   it('refuses invalid schedules', () => { const s = sampleSchedule(); s.days[0].shift!.presenceEnd = ''; expect(() => scheduleIcsText(s)).toThrow(); });
+  it('localises generated event content', () => { const ics = scheduleIcsText(sampleSchedule(), new Date(), 'de'); expect(ics).toContain('GETEILTER DIENST'); expect(ics).toContain('DESCRIPTION:Der Dienst beginnt in zwei Stunden'); expect(ics).toContain('SUMMARY:Demo · Ausgleichsruhe'); });
 });

@@ -22,10 +22,12 @@ The product is private-by-design: each person imports and keeps their own schedu
 
 ## 3. Product language
 
-- **French is the required product language for the MVP.**
-- All user-facing interface copy must be in French, including onboarding, buttons, navigation, menus, labels, validation messages, errors, empty states, accessibility labels and installation guidance.
-- Dates, weekdays and human-readable statuses must use French locale conventions (`fr-CH` where locale-specific formatting is needed).
-- Do not introduce Italian or English user-facing copy in new features.
+- The interface supports **French, English, Italian and German**.
+- **French is the default language** on first use, independently of the browser language.
+- The user can change the language at any time from the persistent language selector. The explicit choice is stored locally on the device.
+- All user-facing interface copy must be localized, including onboarding, buttons, navigation, menus, labels, validation and parser messages, errors, empty states, accessibility labels, installation guidance and generated ICS content.
+- Dates, weekdays and human-readable statuses must use the selected locale conventions (`fr-CH`, `en-GB`, `it-CH` or `de-CH`).
+- New features must add complete copy for all four supported languages.
 - The product name **LSD — Lausanne Shift Discovery** and the brand tagline **A smoother trip through every shift.** are intentional English-language brand exceptions.
 - Source data imported from a planning PDF may retain employer-specific codes where changing them would alter their meaning, but explanatory UI around those codes must be in French.
 
@@ -214,7 +216,7 @@ Persist data by local user/device only.
 - Do not rely on colour alone for shift status.
 - Provide visible focus states, sufficient text contrast and labelled controls.
 - Preserve a compact calendar; do not fill every cell with verbose text.
-- The document language must be declared as French (`lang="fr"`).
+- The document language must match the selected interface language. It defaults to French (`lang="fr"`).
 
 ## 13. Explicit non-goals for the MVP
 
@@ -227,7 +229,7 @@ Persist data by local user/device only.
 - LLM-based parsing.
 - Live calendar subscription/sync.
 - Complex push notifications.
-- Multi-language UI/localization beyond French for the MVP.
+- Additional interface languages beyond French, English, Italian and German.
 
 ## 14. MVP acceptance criteria
 
@@ -239,7 +241,7 @@ Persist data by local user/device only.
 6. A new planning can be merged or replace an overlapping interval without losing unrelated history.
 7. The user can export an ICS calendar with correct Zurich timezone, reminders and overnight shifts.
 8. No schedule data or PDF is sent to a server during normal use.
-9. All user-facing application text is in French, except the explicitly defined English brand name/tagline, with French date/weekday formatting.
+9. All user-facing application text, validation feedback and ICS content follows the selected language, with localized date/weekday formatting. French is used on first launch. The explicitly defined English brand name/tagline remains unchanged.
 
 ## 15. Implementation decisions and remaining device checks
 
