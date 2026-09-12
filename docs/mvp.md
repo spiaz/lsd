@@ -1,6 +1,6 @@
 # LSD — MVP Specification
 
-> **LSD — Lausanne Shift Driver**  
+> **LSD — Lausanne Shift Discovery**  
 > *A smoother trip through every shift.*
 
 ## 1. Purpose
@@ -26,7 +26,7 @@ The product is private-by-design: each person imports and keeps their own schedu
 - All user-facing interface copy must be in French, including onboarding, buttons, navigation, menus, labels, validation messages, errors, empty states, accessibility labels and installation guidance.
 - Dates, weekdays and human-readable statuses must use French locale conventions (`fr-CH` where locale-specific formatting is needed).
 - Do not introduce Italian or English user-facing copy in new features.
-- The product name **LSD — Lausanne Shift Driver** may remain unchanged as a brand name.
+- The product name **LSD — Lausanne Shift Discovery** may remain unchanged as a brand name.
 - Source data imported from a planning PDF may retain employer-specific codes where changing them would alter their meaning, but explanatory UI around those codes must be in French.
 
 ## 4. Distribution and installation
@@ -147,7 +147,7 @@ ICS export is a snapshot. After importing a revised PDF, the user exports a new 
 ### Brand
 
 - **Product name:** LSD
-- **Expansion:** Lausanne Shift Driver
+- **Expansion:** Lausanne Shift Discovery
 - **French tagline:** *Des trajets plus simples, service après service.*
 
 The name is intentionally playful; the product should nevertheless remain professional and useful.
