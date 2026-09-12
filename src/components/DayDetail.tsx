@@ -45,21 +45,23 @@ function DayCard({ date, day, locale }: { date: string; day?: ScheduleDay; local
 export function DayDetail({ date, days, coverageStart, coverageEnd, locale, onClose, onDateChange }: Props) {
   const t = translator(locale);
   const view = useRef<HTMLElement>(null);
+  const initialDate = useRef(date);
+  const lastReportedDate = useRef(date);
   const pinchStart = useRef<number | null>(null);
   const frame = useRef<number | null>(null);
   const daysByDate = useMemo(() => new Map(days.map(day => [day.date, day])), [days]);
   const dates = useMemo(() => {
     const output: string[] = [];
     for (let current = coverageStart; current <= coverageEnd; current = addDays(current, 1)) output.push(current);
-    if (date < coverageStart) output.unshift(date);
-    if (date > coverageEnd) output.push(date);
+    if (initialDate.current < coverageStart) output.unshift(initialDate.current);
+    if (initialDate.current > coverageEnd) output.push(initialDate.current);
     return output;
-  }, [coverageEnd, coverageStart, date]);
+  }, [coverageEnd, coverageStart]);
 
   useEffect(() => {
-    const target = view.current?.querySelector<HTMLElement>(`[data-date="${date}"]`);
+    const target = view.current?.querySelector<HTMLElement>(`[data-date="${initialDate.current}"]`);
     target?.scrollIntoView({ block: 'start' });
-  }, [date]);
+  }, []);
 
   useEffect(() => {
     const element = view.current;
@@ -93,7 +95,10 @@ export function DayDetail({ date, days, coverageStart, coverageEnd, locale, onCl
       const cards = [...container.querySelectorAll<HTMLElement>('[data-date]')];
       const nearest = cards.reduce<HTMLElement | undefined>((best, card) => !best || Math.abs(card.getBoundingClientRect().top - top) < Math.abs(best.getBoundingClientRect().top - top) ? card : best, undefined);
       const currentDate = nearest?.dataset.date;
-      if (currentDate) onDateChange(currentDate);
+      if (currentDate && currentDate !== lastReportedDate.current) {
+        lastReportedDate.current = currentDate;
+        onDateChange(currentDate);
+      }
     });
   }
 
