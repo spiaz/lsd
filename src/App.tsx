@@ -19,17 +19,17 @@ export function App() {
         <div className="brand-mark" aria-hidden="true">LSD</div>
         <div>
           <p className="eyebrow">Lausanne Shift Driver</p>
-          <h1>A smoother trip through every shift.</h1>
+          <h1>Des trajets plus simples, service après service.</h1>
         </div>
       </header>
 
       <section className="import-card" aria-labelledby="import-title">
         <div className="icon-tile"><CalendarDays aria-hidden="true" /></div>
-        <p className="eyebrow">Il tuo planning</p>
-        <h2 id="import-title">Importa il PDF dei turni</h2>
+        <p className="eyebrow">Votre planning</p>
+        <h2 id="import-title">Importez le PDF de vos services</h2>
         <p className="intro">
-          Il file viene letto sul dispositivo. Prima di salvare il planning potrai controllare date,
-          turni singoli, turni spezzati e anomalie.
+          Le fichier est lu directement sur votre appareil. Avant d’enregistrer le planning, vous pourrez vérifier les dates,
+          les services simples, les services coupés et les éventuelles anomalies.
         </p>
 
         <input
@@ -41,18 +41,18 @@ export function App() {
         />
         <button className="primary-action" type="button" onClick={() => inputRef.current?.click()}>
           <FileUp aria-hidden="true" />
-          {selectedFile ? 'Scegli un altro PDF' : 'Scegli il PDF'}
+          {selectedFile ? 'Choisir un autre PDF' : 'Choisir le PDF'}
         </button>
 
         {selectedFile && (
           <p className="file-selection" role="status">
-            Selezionato: <strong>{selectedFile.name}</strong>
+            Fichier sélectionné : <strong>{selectedFile.name}</strong>
           </p>
         )}
 
         <div className="privacy-note">
           <ShieldCheck aria-hidden="true" />
-          <span>Nessun PDF viene caricato su un server.</span>
+          <span>Aucun PDF n’est envoyé vers un serveur.</span>
         </div>
       </section>
     </main>
