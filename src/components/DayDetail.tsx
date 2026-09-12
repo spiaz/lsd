@@ -15,7 +15,8 @@ export function DayDetail({ date, day, locale, onClose, onMove }: { date: string
     if (Math.abs(dx) > 75 && Math.abs(dx) > Math.abs(dy) * 1.5) onMove(dx < 0 ? 1 : -1);
   }}>
     <div className="toolbar"><button onClick={onClose}><CalendarDays />{t('day.calendar')}</button><div className="actions"><button aria-label={t('day.previous')} onClick={() => onMove(-1)}><ChevronLeft /></button><button aria-label={t('day.next')} onClick={() => onMove(1)}><ChevronRight /></button></div></div>
-    <p className="eyebrow">{formatDate(date, { weekday: 'long' }, locale)}</p><h2 id="day-title" tabIndex={-1}>{formatDate(date, undefined, locale)}</h2>
+    <p className="eyebrow">{formatDate(date, { weekday: 'long' }, locale)}</p>
+    <div className="day-heading"><h2 id="day-title" tabIndex={-1}>{formatDate(date, undefined, locale)}</h2>{shift?.pay && <div className="pay-highlight">{t('day.pay', { pay: shift.pay })}</div>}</div>
     <div className="shift-label">{shift ? <BusFront /> : <Coffee />}<span>{shift ? shift.kind === 'split' ? t('shift.split') : t('shift.single') : day ? statusLabel(day.status, locale) : t('day.none')}</span></div>
     {!shift && <p className="muted">{day ? day.absenceLabel || t('day.noShift') : t('day.notImported')}</p>}
     {shift && <>
@@ -27,7 +28,6 @@ export function DayDetail({ date, day, locale, onClose, onMove }: { date: string
           {block.trips.map((trip, j) => <article className="trip" key={j}><div className="trip-time"><strong>{displayTime(trip.start)}</strong><span>{displayTime(trip.end)}</span></div><div className="trip-route"><strong>{trip.origin || t('day.unknownOrigin')} → {trip.destination || t('day.unknownDestination')}</strong><div className="trip-meta"><span><Signpost />{trip.line || t('day.unknownLine')}</span><span><BusFront />{trip.vehicle || t('day.unknownVehicle')}</span></div></div></article>)}
         </section>
       </div>)}
-      {shift.pay && <details><summary>{t('day.otherPdf')}</summary><p>{t('day.pay', { pay: shift.pay })}</p></details>}
       <p className="muted small">{t('day.nextDayHelp')}</p>
     </>}
   </section>;
