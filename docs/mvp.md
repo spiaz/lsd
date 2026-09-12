@@ -240,3 +240,15 @@ Persist data by local user/device only.
 7. The user can export an ICS calendar with correct Zurich timezone, reminders and overnight shifts.
 8. No schedule data or PDF is sent to a server during normal use.
 9. All user-facing application text is in French, except the explicitly defined English brand name/tagline, with French date/weekday formatting.
+
+## 15. Implementation decisions and remaining device checks
+
+- Split services produce one timed ICS event per block; rest/absence days are all-day events.
+- Presence departure/arrival stations are read from their own columns, independently of trips.
+- Unknown day codes and incomplete fields require review in the editable preview.
+- PDF text extraction is implemented. Scanned PDFs currently show an explicit unsupported
+  message; local OCR remains outstanding.
+- Automated coverage includes parser, PDF.js synthetic-file integration, normalization,
+  validation, merging, ICS, storage and the import UI.
+- Physical iPhone/Android installation, visual checks at 370px, offline browser reopening
+  and third-party calendar import remain manual acceptance checks.

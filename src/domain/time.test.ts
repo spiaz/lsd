@@ -20,3 +20,8 @@ describe('normalizeOperationalTime', () => {
     });
   });
 });
+
+describe('invalid operational times', () => {
+  it.each(['12:60', '48:00', '-1:20', '12.30', '', 'abc'])('rejects %s', value => expect(() => normalizeOperationalTime(value)).toThrow());
+  it('accepts midnight and preserves next-day offset', () => expect(normalizeOperationalTime('24:00').display).toBe('00:00 (+1)'));
+});

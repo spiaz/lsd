@@ -8,13 +8,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'],
       manifest: {
         id: '/lsd/',
-        name: 'LSD — Lausanne Shift Driver',
+        name: 'LSD — Lausanne Shift Discovery',
         short_name: 'LSD',
         description: 'A smoother trip through every shift.',
-        lang: 'it',
+        lang: 'fr',
         start_url: '/lsd/',
         scope: '/lsd/',
         display: 'standalone',
@@ -22,6 +22,8 @@ export default defineConfig({
         background_color: '#282A36',
         theme_color: '#282A36',
         icons: [
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
           {
             src: 'favicon.svg',
             sizes: 'any',
@@ -32,7 +34,8 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: 'index.html',
-        globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+        globPatterns: ['**/*.{js,mjs,css,html,svg,png,woff2}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
     }),
   ],

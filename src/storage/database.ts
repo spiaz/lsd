@@ -20,10 +20,10 @@ export function openLsdDatabase() {
 
 export async function saveSchedule(schedule: Schedule) {
   const database = await openLsdDatabase();
-  await database.put('schedules', schedule);
+  try { await database.put('schedules', schedule); } finally { database.close(); }
 }
 
 export async function listSchedules() {
   const database = await openLsdDatabase();
-  return database.getAll('schedules');
+  try { return await database.getAll('schedules'); } finally { database.close(); }
 }

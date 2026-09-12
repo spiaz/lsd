@@ -94,7 +94,7 @@ def build_days() -> list[Day]:
                 Trip(line, vehicle, origin, start, middle, mid),
                 Trip(line, vehicle, middle, mid, destination, end),
             )
-            days.append(Day(current, "UNICO", f"S-{100 + number}", start, end, "07:20", "00:30", trips))
+            days.append(Day(current, "UNICO", f"S-{100 + number}", start, end, f"{(int(end[:2]) * 60 + int(end[3:]) - int(start[:2]) * 60 - int(start[3:]) - 30) // 60:02d}:{(int(end[:2]) * 60 + int(end[3:]) - int(start[:2]) * 60 - int(start[3:]) - 30) % 60:02d}", "00:30", trips))
     return days
 
 
@@ -123,7 +123,7 @@ def draw_page_header(canvas: Canvas, page_number: int) -> float:
 def draw_columns(canvas: Canvas, y: float) -> float:
     columns = (
         ("Jour", 22), ("Date", 52), ("Service", 95), ("Type", 131),
-        ("Pres. debut", 180), ("Pres. fin", 226), ("Ligne", 267),
+        ("Pres. debut", 180), ("P. fin", 226), ("Bloc", 250), ("Ligne", 267),
         ("Voiture", 294), ("De", 332), ("Debut", 401),
         ("A", 434), ("Fin", 504), ("Travail", 535), ("RR", 570),
     )
@@ -151,8 +151,9 @@ def draw_day(canvas: Canvas, item: Day, y: float) -> float:
     fit_text(canvas, item.rr, 570, y - 4, 20)
     y -= ROW_HEIGHT
 
-    for trip in item.trips:
+    for index, trip in enumerate(item.trips):
         canvas.setFillColor(colors.HexColor("#555B70"))
+        fit_text(canvas, "2" if item.status == "SPEZZATO" and index >= 2 else "1", 250, y - 4, 15)
         fit_text(canvas, trip.line, 267, y - 4, 25)
         fit_text(canvas, trip.vehicle, 294, y - 4, 36)
         fit_text(canvas, trip.origin, 332, y - 4, 66, 5.8)
