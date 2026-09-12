@@ -20,16 +20,25 @@ The product is private-by-design: each person imports and keeps their own schedu
 - **Reliable over clever:** parsing must be deterministic, inspected before saving, and never silently invent data.
 - **Dense but calm:** calendar status is scannable at a glance; details are available on demand.
 
-## 3. Distribution and installation
+## 3. Product language
+
+- **French is the required product language for the MVP.**
+- All user-facing interface copy must be in French, including onboarding, buttons, navigation, menus, labels, validation messages, errors, empty states, accessibility labels and installation guidance.
+- Dates, weekdays and human-readable statuses must use French locale conventions (`fr-CH` where locale-specific formatting is needed).
+- Do not introduce Italian or English user-facing copy in new features.
+- The product name **LSD — Lausanne Shift Driver** may remain unchanged as a brand name.
+- Source data imported from a planning PDF may retain employer-specific codes where changing them would alter their meaning, but explanatory UI around those codes must be in French.
+
+## 4. Distribution and installation
 
 - Host the static PWA on GitHub Pages.
 - Support installation on iPhone, Android and desktop.
-- Show brief, platform-appropriate instructions for **Add to Home Screen** / **Install app** on first visit.
+- Show brief, platform-appropriate instructions for **Ajouter à l’écran d’accueil** / **Installer l’application** on first visit.
 - Cache the application shell through a service worker for offline use.
 
-## 4. First use and local state
+## 5. First use and local state
 
-1. On first launch, show an onboarding screen with **Import your schedule PDF**.
+1. On first launch, show an onboarding screen with **Importer le PDF de votre planning**.
 2. The browser reads and parses the PDF locally.
 3. Show an import preview before saving.
 4. Save parsed schedule data to IndexedDB.
@@ -39,7 +48,7 @@ Do not require the user to re-upload their PDF every time the app opens.
 
 The source PDF does not need to be retained after a successful import. Store source filename, import date and schedule coverage as metadata.
 
-## 5. Planning import and updates
+## 6. Planning import and updates
 
 ### Import
 
@@ -62,22 +71,22 @@ The user must be able to cancel an import. Ambiguities must be visible and corre
 
 ### Updating
 
-Expose **Update schedule** from the app menu.
+Expose **Mettre à jour le planning** from the app menu.
 
 When importing a new PDF, offer:
 
-- **Add new period**; or
-- **Replace overlapping period**.
+- **Ajouter une nouvelle période**; or
+- **Remplacer la période qui se chevauche**.
 
 Keep previously imported history unless the user explicitly replaces it.
 
-## 6. Calendar and daily navigation
+## 7. Calendar and daily navigation
 
 ### Calendar home
 
 - The home screen is a minimal monthly calendar.
 - Today is selected and visually unmistakable on launch.
-- Provide previous/next month controls and an **Today** action.
+- Provide previous/next month controls and an **Aujourd’hui** action.
 - Days outside the available schedule are visually muted.
 - Each scheduled day shows a compact semantic status:
 
@@ -96,9 +105,9 @@ Keep these textual markers even when using icons: they remain readable in compac
 - A clear calendar/back action collapses the detail and returns to the monthly grid.
 - Keyboard Escape and pinch-in may also close the focused day view on supported devices.
 
-## 7. Shift detail
+## 8. Shift detail
 
-A work-day detail must distinguish **UNICO** (single) and **SPEZZATO** (split).
+A work-day detail must distinguish **SERVICE SIMPLE** (single) and **SERVICE COUPÉ** (split) in user-facing copy. Employer/source codes such as `UNICO` or `SPEZZATO` may be preserved as secondary source references if useful.
 
 Show, when present:
 
@@ -117,9 +126,9 @@ Normalize overnight time for human display. For example, source time `25:31` mus
 
 Rest, holiday, leave and compensatory rest must be shown as day-level statuses, not empty work shifts.
 
-## 8. Export to calendar
+## 9. Export to calendar
 
-Provide **Export calendar (.ics)** in the schedule menu.
+Provide **Exporter le calendrier (.ics)** in the schedule menu.
 
 - Generate a standards-compatible ICS file.
 - Use timezone `Europe/Zurich`.
@@ -133,13 +142,13 @@ Provide **Export calendar (.ics)** in the schedule menu.
 
 ICS export is a snapshot. After importing a revised PDF, the user exports a new ICS file and updates/replaces their calendar import. Automatic calendar sync is not part of the MVP.
 
-## 9. UI and visual design
+## 10. UI and visual design
 
 ### Brand
 
 - **Product name:** LSD
 - **Expansion:** Lausanne Shift Driver
-- **Tagline:** *A smoother trip through every shift.*
+- **French tagline:** *Des trajets plus simples, service après service.*
 
 The name is intentionally playful; the product should nevertheless remain professional and useful.
 
@@ -185,7 +194,7 @@ Use a coherent line icon set (for example Lucide), with labels or accessible too
 
 Icons should be prominent in navigation, actions and shift details, but calendar cells must remain compact and scannable.
 
-## 10. Data model
+## 11. Data model
 
 At minimum, a schedule contains:
 
@@ -198,15 +207,16 @@ At minimum, a schedule contains:
 
 Persist data by local user/device only.
 
-## 11. Accessibility and responsive requirements
+## 12. Accessibility and responsive requirements
 
 - Touch targets must be comfortable on phones.
 - Calendar must remain usable at widths down to 370px.
 - Do not rely on colour alone for shift status.
 - Provide visible focus states, sufficient text contrast and labelled controls.
 - Preserve a compact calendar; do not fill every cell with verbose text.
+- The document language must be declared as French (`lang="fr"`).
 
-## 12. Explicit non-goals for the MVP
+## 13. Explicit non-goals for the MVP
 
 - User accounts or authentication.
 - Server-side PDF storage.
@@ -217,8 +227,9 @@ Persist data by local user/device only.
 - LLM-based parsing.
 - Live calendar subscription/sync.
 - Complex push notifications.
+- Multi-language UI/localization beyond French for the MVP.
 
-## 13. MVP acceptance criteria
+## 14. MVP acceptance criteria
 
 1. A user can install LSD and import a supported personal planning PDF from a phone.
 2. The planning remains available after closing/reopening the app and while offline.
@@ -228,3 +239,4 @@ Persist data by local user/device only.
 6. A new planning can be merged or replace an overlapping interval without losing unrelated history.
 7. The user can export an ICS calendar with correct Zurich timezone, reminders and overnight shifts.
 8. No schedule data or PDF is sent to a server during normal use.
+9. All user-facing application text is in French, with French date/weekday formatting.
