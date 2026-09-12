@@ -39,6 +39,19 @@ describe('operational column layout', () => {
     expect(result.issues).toEqual([]);
     expect(result.schedule!.days[0].shift).toMatchObject({ origin: 'Depot A', destination: 'Depot B', blocks: [{ trips: [{ origin: 'Stop A', destination: 'Stop B' }] }] });
   });
+  it('does not flag a service code as an unknown day code when shift details continue on the next row', () => {
+    const p = operational();
+    const cell = (text: string, column: number, y: number) => ({ text, x: column * 60 + 20 - text.length, y, width: text.length * 2 });
+    p.items = p.items.filter(i => i.y === 800);
+    p.items.push(
+      cell('01/10/2026', 0, 780), cell('SERV-42', 1, 780),
+      cell('Depot A', 2, 768), cell('06:00', 3, 768), cell('Depot B', 4, 768), cell('18:00', 5, 768),
+      cell('L1', 6, 768), cell('V1', 7, 768), cell('Stop A', 8, 768), cell('06:10', 9, 768), cell('Stop B', 10, 768), cell('17:50', 11, 768),
+    );
+    const result = parsePdfItems([p], 'synthetic.pdf');
+    expect(result.issues.some(i => i.code === 'STATUS')).toBe(false);
+    expect(result.schedule!.days[0]).toMatchObject({ status: 'work', shift: { presenceStart: '06:00', presenceEnd: '18:00' } });
+  });
   it('reports missing presence stations instead of substituting a trip station', () => {
     const p = operational(); p.items = p.items.filter(i => i.text !== 'Depot A');
     const result = parsePdfItems([p], 'synthetic.pdf');
