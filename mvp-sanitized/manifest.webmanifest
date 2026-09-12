@@ -1,0 +1,12 @@
+{
+  "id": "./",
+  "name": "Turni demo",
+  "short_name": "Turni demo",
+  "description": "Calendario dimostrativo, privo di dati reali.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7fb",
+  "theme_color": "#5147e5"
+}
