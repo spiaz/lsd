@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BusFront, CalendarDays, CalendarArrowDown, ChevronLeft, ChevronRight, FileUp, Languages, Menu, ShieldCheck, Target, X } from 'lucide-react';
 import type { Schedule } from './domain/schedule';
-import { addDays, formatDate, todayDate } from './domain/time';
+import { formatDate, addDays, todayDate } from './domain/time';
 import { mergeSchedules } from './domain/merge';
 import { validateSchedule } from './domain/validation';
 import { listSchedules, saveSchedule } from './storage/database';
@@ -73,7 +73,7 @@ export function App() {
     {busy && <p className="notice" role="status">{t('loading.pdf')}</p>}
     {menu && <section className="panel menu-panel" aria-label={t('menu.label')}><button disabled={busy} onClick={() => input.current?.click()}><FileUp />{t('menu.update')}</button><button onClick={exportIcs}><CalendarArrowDown />{t('menu.export')}</button><p className="muted small">{t('menu.exportHelp')}</p>{schedule && <details><summary>{t('menu.savedImports')}</summary>{(schedule.imports || [schedule.metadata]).map((item, index) => <p key={index} className="small filename">{item.sourceFileName}<br />{formatDate(item.coverageStart, undefined, locale)} – {formatDate(item.coverageEnd, undefined, locale)}<br />{t('menu.importedOn', { date: new Intl.DateTimeFormat(intlLocales[locale]).format(new Date(item.importedAt)) })}</p>)}</details>}</section>}
     {!loading && !schedule ? <section className="panel onboarding" aria-labelledby="import-title"><div className="hero-icon"><CalendarDays /></div><p className="eyebrow">{t('onboarding.eyebrow')}</p><h2 id="import-title">{t('onboarding.title1')}<br />{t('onboarding.title2')}</h2><p className="intro">{t('onboarding.intro')}</p><button className="primary-action" disabled={busy || !storageReady} onClick={() => input.current?.click()}><FileUp />{t('onboarding.action')}</button><p className="privacy-note"><ShieldCheck />{t('privacy.localFile')}</p></section> : schedule && <>
-      {detail ? <DayDetail date={selected} day={daysByDate.get(selected)} locale={locale} onClose={closeDetail} onMove={dayOffset => setSelected(addDays(selected, dayOffset))} /> : <section className="panel calendar" aria-labelledby="month-title">
+      {detail ? <DayDetail date={selected} days={schedule.days} coverageStart={schedule.metadata.coverageStart} coverageEnd={schedule.metadata.coverageEnd} locale={locale} onClose={closeDetail} onDateChange={setSelected} /> : <section className="panel calendar" aria-labelledby="month-title">
         <div className="section-heading"><div><p className="eyebrow">{t('calendar.eyebrow')}</p><h2 id="month-title">{formatDate(first, { month: 'long', year: 'numeric' }, locale)}</h2></div><button onClick={() => { setMonth(today.slice(0, 7)); setSelected(today); }}><Target />{t('calendar.today')}</button></div>
         <div className="toolbar"><p className="muted small">{t('calendar.hint')}</p><div className="actions"><button aria-label={t('calendar.previousMonth')} onClick={() => moveMonth(-1)}><ChevronLeft /></button><button aria-label={t('calendar.nextMonth')} onClick={() => moveMonth(1)}><ChevronRight /></button></div></div>
         <div className="calendar-grid"><div className="weekdays">{weekdays.map((day, index) => <span key={index}>{day}</span>)}</div><div className="dates">{Array.from({ length: offset }, (_, index) => <span key={`blank-${index}`} />)}{Array.from({ length: total }, (_, index) => {

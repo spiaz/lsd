@@ -1,24 +1,31 @@
-import { BusFront, CalendarDays, ChevronLeft, ChevronRight, Clock3, Coffee, Route, Signpost } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { BusFront, CalendarDays, Clock3, Coffee, Route, Signpost } from 'lucide-react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { ScheduleDay } from '../domain/schedule';
-import { displayTime, duration, formatDate, timeMinutes } from '../domain/time';
+import { addDays, displayTime, duration, formatDate, timeMinutes } from '../domain/time';
 import { statusLabel, translator, type Locale } from '../i18n';
-export function DayDetail({ date, day, locale, onClose, onMove }: { date: string; day?: ScheduleDay; locale: Locale; onClose: () => void; onMove: (offset: number) => void }) {
+
+type Props = {
+  date: string;
+  days: ScheduleDay[];
+  coverageStart: string;
+  coverageEnd: string;
+  locale: Locale;
+  onClose: () => void;
+  onDateChange: (date: string) => void;
+};
+
+function distance(touches: TouchList) {
+  if (touches.length < 2) return 0;
+  return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+}
+
+function DayCard({ date, day, locale }: { date: string; day?: ScheduleDay; locale: Locale }) {
   const t = translator(locale);
-  const heading = useRef<HTMLHeadingElement>(null), touch = useRef<{ x: number; y: number } | null>(null);
-  useEffect(() => { heading.current?.focus(); }, [date]);
-  useEffect(() => { const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); }; window.addEventListener('keydown', handle); return () => window.removeEventListener('keydown', handle); }, [onClose]);
   const shift = day?.status === 'work' ? day.shift : undefined;
-  return <section className="panel day-detail" aria-labelledby="day-title" onTouchStart={e => { if (e.touches.length === 1) touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }} onTouchEnd={e => {
-    if (!touch.current || !e.changedTouches.length) return;
-    const dx = e.changedTouches[0].clientX - touch.current.x, dy = e.changedTouches[0].clientY - touch.current.y; touch.current = null;
-    if (Math.abs(dx) > 75 && Math.abs(dx) > Math.abs(dy) * 1.5) onMove(dx < 0 ? 1 : -1);
-  }}>
-    <div className="toolbar"><button onClick={onClose}><CalendarDays />{t('day.calendar')}</button><div className="actions"><button aria-label={t('day.previous')} onClick={() => onMove(-1)}><ChevronLeft /></button><button aria-label={t('day.next')} onClick={() => onMove(1)}><ChevronRight /></button></div></div>
-    <p className="eyebrow">{formatDate(date, { weekday: 'long' }, locale)}</p>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.75rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-      <h2 id="day-title" tabIndex={-1} style={{ marginBottom: 0 }}>{formatDate(date, undefined, locale)}</h2>
-      {shift?.pay && <strong style={{ padding: '.55rem .8rem', borderRadius: '12px', background: '#444058', color: '#ffb86c', fontSize: '.88rem', lineHeight: 1.25 }}>{t('day.pay', { pay: shift.pay })}</strong>}
+  return <article className="day-card" data-date={date} aria-label={formatDate(date, undefined, locale)}>
+    <div className="day-card-heading">
+      <div><p className="eyebrow">{formatDate(date, { weekday: 'long' }, locale)}</p><h2>{formatDate(date, undefined, locale)}</h2></div>
+      {shift?.pay && <strong className="pay-pill">{t('day.pay', { pay: shift.pay })}</strong>}
     </div>
     <div className="shift-label">{shift ? <BusFront /> : <Coffee />}<span>{shift ? shift.kind === 'split' ? t('shift.split') : t('shift.single') : day ? statusLabel(day.status, locale) : t('day.none')}</span></div>
     {!shift && <p className="muted">{day ? day.absenceLabel || t('day.noShift') : t('day.notImported')}</p>}
@@ -31,7 +38,67 @@ export function DayDetail({ date, day, locale, onClose, onMove }: { date: string
           {block.trips.map((trip, j) => <article className="trip" key={j}><div className="trip-time"><strong>{displayTime(trip.start)}</strong><span>{displayTime(trip.end)}</span></div><div className="trip-route"><strong>{trip.origin || t('day.unknownOrigin')} → {trip.destination || t('day.unknownDestination')}</strong><div className="trip-meta"><span><Signpost />{trip.line || t('day.unknownLine')}</span><span><BusFront />{trip.vehicle || t('day.unknownVehicle')}</span></div></div></article>)}
         </section>
       </div>)}
-      <p className="muted small">{t('day.nextDayHelp')}</p>
     </>}
+  </article>;
+}
+
+export function DayDetail({ date, days, coverageStart, coverageEnd, locale, onClose, onDateChange }: Props) {
+  const t = translator(locale);
+  const view = useRef<HTMLElement>(null);
+  const pinchStart = useRef<number | null>(null);
+  const frame = useRef<number | null>(null);
+  const daysByDate = useMemo(() => new Map(days.map(day => [day.date, day])), [days]);
+  const dates = useMemo(() => {
+    const output: string[] = [];
+    for (let current = coverageStart; current <= coverageEnd; current = addDays(current, 1)) output.push(current);
+    if (date < coverageStart) output.unshift(date);
+    if (date > coverageEnd) output.push(date);
+    return output;
+  }, [coverageEnd, coverageStart, date]);
+
+  useEffect(() => {
+    const target = view.current?.querySelector<HTMLElement>(`[data-date="${date}"]`);
+    target?.scrollIntoView({ block: 'start' });
+  }, [date]);
+
+  useEffect(() => {
+    const element = view.current;
+    if (!element) return;
+    const onTouchStart = (event: TouchEvent) => { if (event.touches.length === 2) pinchStart.current = distance(event.touches); };
+    const onTouchMove = (event: TouchEvent) => {
+      if (event.touches.length !== 2 || !pinchStart.current) return;
+      event.preventDefault();
+      const current = distance(event.touches);
+      if (current / pinchStart.current < 0.72) { pinchStart.current = null; onClose(); }
+    };
+    const onTouchEnd = () => { pinchStart.current = null; };
+    element.addEventListener('touchstart', onTouchStart, { passive: true });
+    element.addEventListener('touchmove', onTouchMove, { passive: false });
+    element.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => { element.removeEventListener('touchstart', onTouchStart); element.removeEventListener('touchmove', onTouchMove); element.removeEventListener('touchend', onTouchEnd); };
+  }, [onClose]);
+
+  useEffect(() => {
+    const handle = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handle);
+    return () => window.removeEventListener('keydown', handle);
+  }, [onClose]);
+
+  function updateCurrentDate() {
+    if (frame.current !== null) cancelAnimationFrame(frame.current);
+    frame.current = requestAnimationFrame(() => {
+      const container = view.current;
+      if (!container) return;
+      const top = container.getBoundingClientRect().top + 86;
+      const cards = [...container.querySelectorAll<HTMLElement>('[data-date]')];
+      const nearest = cards.reduce<HTMLElement | undefined>((best, card) => !best || Math.abs(card.getBoundingClientRect().top - top) < Math.abs(best.getBoundingClientRect().top - top) ? card : best, undefined);
+      const currentDate = nearest?.dataset.date;
+      if (currentDate) onDateChange(currentDate);
+    });
+  }
+
+  return <section ref={view} className="day-stream" aria-label={t('day.calendar')} onScroll={updateCurrentDate}>
+    <header className="day-stream-header"><button onClick={onClose}><CalendarDays />{t('day.calendar')}</button><span>{formatDate(date, { month: 'long', year: 'numeric' }, locale)}</span></header>
+    <div className="day-stream-list">{dates.map(itemDate => <DayCard key={itemDate} date={itemDate} day={daysByDate.get(itemDate)} locale={locale} />)}</div>
   </section>;
 }

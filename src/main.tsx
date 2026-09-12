@@ -4,6 +4,7 @@ import { registerSW } from 'virtual:pwa-register';
 import { App } from './App';
 import './styles.css';
 import './alucard.css';
+import './mvp-navigation.css';
 
 registerSW({ immediate: true });
 
