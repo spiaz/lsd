@@ -16,7 +16,10 @@ export function DayDetail({ date, day, locale, onClose, onMove }: { date: string
   }}>
     <div className="toolbar"><button onClick={onClose}><CalendarDays />{t('day.calendar')}</button><div className="actions"><button aria-label={t('day.previous')} onClick={() => onMove(-1)}><ChevronLeft /></button><button aria-label={t('day.next')} onClick={() => onMove(1)}><ChevronRight /></button></div></div>
     <p className="eyebrow">{formatDate(date, { weekday: 'long' }, locale)}</p>
-    <div className="day-heading"><h2 id="day-title" tabIndex={-1}>{formatDate(date, undefined, locale)}</h2>{shift?.pay && <div className="pay-highlight">{t('day.pay', { pay: shift.pay })}</div>}</div>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.75rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+      <h2 id="day-title" tabIndex={-1} style={{ marginBottom: 0 }}>{formatDate(date, undefined, locale)}</h2>
+      {shift?.pay && <strong style={{ padding: '.55rem .8rem', borderRadius: '12px', background: '#444058', color: '#ffb86c', fontSize: '.88rem', lineHeight: 1.25 }}>{t('day.pay', { pay: shift.pay })}</strong>}
+    </div>
     <div className="shift-label">{shift ? <BusFront /> : <Coffee />}<span>{shift ? shift.kind === 'split' ? t('shift.split') : t('shift.single') : day ? statusLabel(day.status, locale) : t('day.none')}</span></div>
     {!shift && <p className="muted">{day ? day.absenceLabel || t('day.noShift') : t('day.notImported')}</p>}
     {shift && <>
