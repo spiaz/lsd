@@ -1,0 +1,46 @@
+/* MVP navigation model: compact calendar overview -> immersive multi-day detail stream. */
+.calendar{padding:1.15rem}
+.calendar .section-heading{margin-bottom:.7rem}
+.calendar .section-heading h2{font-size:1.35rem}
+.calendar .toolbar{margin-bottom:.55rem}
+.weekdays,.dates{gap:4px}
+.weekdays{margin:.65rem 0 .4rem;font-size:.66rem}
+.day{min-height:54px;padding:.25rem;background:transparent;border:1px solid transparent;border-radius:10px;gap:.1rem}
+.day:hover{background:#383b4d}
+.day-number{width:24px;height:24px;font-size:.82rem;border-radius:7px}
+.day .badge{min-width:17px;min-height:16px;font-size:.6rem;border-radius:5px}
+.day.outside{background:transparent;color:#757b91}
+.day.today{border:1px solid #bd93f9;box-shadow:inset 0 0 0 1px #bd93f9}
+.day.today .day-number{background:#8be9fd;color:#282a36}
+.day.selected:not(.today){border-color:#646a83;background:#383b4d}
+.legend{margin:.85rem 0 .95rem}
+.coverage{padding-top:.8rem}
+
+.day-stream{position:fixed;inset:0;z-index:20;overflow-y:auto;overscroll-behavior:contain;background:#282a36;padding:0 max(12px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));touch-action:pan-y}
+.day-stream-header{position:sticky;top:0;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:.75rem;max-width:720px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) 2px 10px;background:linear-gradient(#282a36 75%,rgba(40,42,54,.94));backdrop-filter:blur(10px)}
+.day-stream-header button{background:#303240;border-color:#505469}
+.day-stream-header span{font-size:.76rem;color:#bfc4d8;text-transform:capitalize}
+.day-stream-list{max-width:720px;margin:0 auto;padding:.25rem 0 35vh}
+.day-card{scroll-margin-top:82px;padding:1.25rem;margin:0 0 .75rem;border:1px solid #505469;background:#303240;border-radius:20px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.day-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}
+.day-card-heading .eyebrow{margin-bottom:.3rem}
+.day-card-heading h2{font-size:1.25rem;margin:0;text-transform:capitalize}
+.pay-pill{padding:.5rem .7rem;border-radius:11px;background:#444058;color:#ffb86c;font-size:.78rem;line-height:1.2}
+.day-card .shift-label{margin:1rem 0}
+.day-card .metrics{margin-bottom:1rem}
+.day-card .block{margin:.75rem 0}
+
+@media(max-width:420px){
+  .calendar{padding:.8rem}
+  .calendar .section-heading{align-items:flex-start}
+  .calendar .section-heading h2{font-size:1.15rem}
+  .calendar .section-heading button{min-height:36px;padding:.45rem .55rem}
+  .calendar .toolbar .muted{display:none}
+  .calendar .toolbar{justify-content:flex-end}
+  .day{min-height:48px;border-radius:8px}
+  .day-number{width:22px;height:22px;font-size:.78rem}
+  .legend{gap:.55rem;font-size:.62rem}
+  .day-stream{padding-left:8px;padding-right:8px}
+  .day-card{padding:1rem;border-radius:17px;margin-bottom:.55rem}
+  .day-card-heading h2{font-size:1.1rem}
+}
