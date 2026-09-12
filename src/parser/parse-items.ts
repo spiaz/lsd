@@ -23,8 +23,14 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
   const t = translator(locale);
   const days: ScheduleDay[] = [], issues: ParseIssue[] = [];
   let current: ScheduleDay | undefined;
+  let pendingUnknownStatus: { day: ScheduleDay; reference: string } | undefined;
   let anyText = false;
   const warn = (code: string, message: string, reference: string, day = current) => issues.push({ severity: 'warning', code, message, sourceReference: reference, date: day?.date });
+  const flushUnknownStatus = () => {
+    if (!pendingUnknownStatus) return;
+    warn('STATUS', t('parser.status'), pendingUnknownStatus.reference, pendingUnknownStatus.day);
+    pendingUnknownStatus = undefined;
+  };
   for (const page of pages) {
     const items = page.items.filter(i => i.text.trim()); anyText ||= items.length > 0;
     const dateHeader = items.find(i => clean(i.text) === 'date');
@@ -58,10 +64,11 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
     for (let r = 0; r < rows.length; r++) {
       const row = rows[r], reference = t('parser.row', { page: page.number, row: r + 1 });
       const invalidDate = row.some(i => /^\d{2}[/.]\d{2}[/.]\d{4}$/.test(i.text.trim()) && !dateValue(i.text));
-      if (invalidDate) { issues.push({ severity: 'error', code: 'DATE', message: t('parser.date'), sourceReference: reference }); current = undefined; continue; }
+      if (invalidDate) { flushUnknownStatus(); issues.push({ severity: 'error', code: 'DATE', message: t('parser.date'), sourceReference: reference }); current = undefined; continue; }
       const dateItem = row.find(i => dateValue(i.text));
       const date = dateItem && dateValue(dateItem.text);
       if (date) {
+        flushUnknownStatus();
         current = { date, status: 'work', sourceReference: reference };
         days.push(current);
       }
@@ -74,10 +81,12 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
         const candidates = new Set(row.filter(i => i.x > dateHeader.x + dateHeader.width && i.x < (origins[0]?.x ?? 180) - 5).map(i => statuses[clean(i.text)]).filter(Boolean));
         const status = statuses[clean(statusText)] || (candidates.size === 1 ? [...candidates][0] : undefined);
         current.status = status || 'absence'; current.absenceLabel = statusText;
-        if (!status) warn('STATUS', t('parser.status'), reference);
+        if (status) pendingUnknownStatus = undefined;
+        else pendingUnknownStatus = { day: current, reference };
         continue;
       }
       if (time(a) || time(b)) {
+        if (pendingUnknownStatus?.day === current) pendingUnknownStatus = undefined;
         const shift = current.shift ||= { kind: 'single', presenceStart: a, presenceEnd: b, blocks: [] };
         current.status = 'work';
         shift.presenceEnd = b;
@@ -115,6 +124,7 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
       }
     }
   }
+  flushUnknownStatus();
   const sorted = [...days].sort((a, b) => a.date.localeCompare(b.date));
   if (!sorted.length) return { issues: [{ severity: 'error', code: anyText ? 'NO_DAYS' : 'SCAN', message: anyText ? t('parser.noDays') : t('parser.scan') }, ...issues] };
   return { schedule: { metadata: { id: crypto.randomUUID(), sourceFileName: filename, importedAt: new Date().toISOString(), coverageStart: sorted[0].date, coverageEnd: sorted.at(-1)!.date }, days: sorted }, issues };
