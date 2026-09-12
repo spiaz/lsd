@@ -15,10 +15,10 @@ export function App() {
 
   return (
     <main className="app-shell">
-      <header className="brand" aria-label="LSD — Lausanne Shift Driver">
+      <header className="brand" aria-label="LSD — Lausanne Shift Discovery">
         <div className="brand-mark" aria-hidden="true">LSD</div>
         <div>
-          <p className="eyebrow">Lausanne Shift Driver</p>
+          <p className="eyebrow">Lausanne Shift Discovery</p>
           <h1>Des trajets plus simples, service après service.</h1>
         </div>
       </header>
