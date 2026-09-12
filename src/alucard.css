@@ -1,0 +1,123 @@
+:root {
+  color: #1f1f1f;
+  background: #fffbe8;
+  color-scheme: light;
+}
+
+body { background: #fffbe8; }
+a, .eyebrow, .language-picker, .coverage svg, .privacy-note svg, legend, summary span + span { color: #036a96; }
+
+button {
+  background: #f0ead7;
+  border-color: #c9c1aa;
+  color: #1f1f1f;
+}
+button:hover { background: #e5ddc7; }
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline-color: #036a96;
+}
+
+.brand-mark,
+.primary-action,
+.badge {
+  background: #644ac9;
+  color: #fffbe8;
+}
+.primary-action:hover { background: #755bd3; }
+.brand h1,
+.intro,
+.muted,
+.privacy-note,
+.weekdays,
+.coverage,
+.legend,
+.metrics span,
+.trip-time span,
+.trip-meta,
+label,
+footer { color: #6e685d; }
+
+.panel {
+  border-color: #d7cfb9;
+  background: #fff7df;
+}
+.hero-icon {
+  background: #eee6d2;
+  color: #644ac9;
+}
+
+.day,
+.metrics > div,
+.stats div {
+  background: #f5eedb;
+}
+.day.outside {
+  background: #eee7d5;
+  color: #9a9282;
+}
+.day.outside .badge {
+  color: #9a9282;
+  background: transparent;
+}
+.day.today { border-color: #644ac9; }
+.day.today .day-number {
+  background: #036a96;
+  color: #fffbe8;
+}
+.day.selected:not(.today) {
+  border-color: #644ac9;
+  background: #eee8f9;
+}
+.badge.split {
+  background: #a34d14;
+  color: #fffbe8;
+}
+.badge.rest {
+  background: #e5f0df;
+  color: #14710a;
+}
+.legend b,
+.stats strong { color: #1f1f1f; }
+.coverage,
+.trip,
+.sticky-actions { border-color: #ddd5c0; }
+
+.menu-panel button { background: #f5eedb; }
+.install-tip,
+.block,
+details,
+fieldset { border-color: #d7cfb9; }
+.install-tip button { background: transparent; }
+footer span,
+.shift-label { color: #644ac9; }
+
+.block { background: #fffaf0; }
+.trip-time strong { color: #036a96; }
+.pause { color: #a34d14; }
+
+.notice { border-color: #b7af9b; }
+.notice.error {
+  border-color: #cb3a2a;
+  background: #fbe7e2;
+  color: #7e231b;
+}
+.notice.warning {
+  border-color: #a34d14;
+  background: #f7eadc;
+  color: #71350e;
+}
+.success { color: #14710a; }
+.danger { color: #cb3a2a; }
+
+input,
+select {
+  border-color: #b8af9b;
+  background: #fffbe8;
+  color: #1f1f1f;
+}
+.check-row input { accent-color: #644ac9; }
+
+.sticky-actions { background: #fff7df; }
