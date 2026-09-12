@@ -15,8 +15,8 @@ function minutes(text: string) {
 }
 const statuses: Record<string, ScheduleDay['status']> = {
   riposo: 'rest', repos: 'rest', r: 'rest', rr: 'compensatory-rest', 'repos compensatoire': 'compensatory-rest',
-  congedo: 'absence', conge: 'absence', maladie: 'absence', absence: 'absence', assenza: 'absence',
-  vacances: 'holiday', ferie: 'holiday', feries: 'holiday', feriee: 'holiday', 'jour ferie': 'holiday',
+  congedo: 'absence', conge: 'absence', c: 'absence', maladie: 'absence', absence: 'absence', assenza: 'absence',
+  vacances: 'holiday', vap: 'holiday', ferie: 'holiday', feries: 'holiday', feriee: 'holiday', 'jour ferie': 'holiday',
 };
 /** Layout adapters use column geometry only. No private fixture text is embedded here. */
 export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale = 'fr'): ParseResult {
