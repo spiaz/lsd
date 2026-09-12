@@ -1,5 +1,6 @@
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
+import type { TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
 import type { ParseResult } from '../domain/schedule';
 import { parsePdfItems, type PdfPage } from './parse-items';
 import { translator, type Locale } from '../i18n';
@@ -17,8 +18,17 @@ export async function parseSchedulePdf(file: File, locale: Locale = 'fr'): Promi
     if (pdf.numPages > 100) return { issues: [{ severity: 'error', code: 'PAGES', message: t('parser.pages') }] };
     const pages: PdfPage[] = [];
     for (let number = 1; number <= pdf.numPages; number++) {
-      const page = await pdf.getPage(number), content = await page.getTextContent();
-      pages.push({ number, items: content.items.flatMap(item => 'str' in item ? [{ text: item.str, x: item.transform[4], y: item.transform[5], width: item.width }] : []) });
+      const page = await pdf.getPage(number);
+      const reader = page.streamTextContent().getReader();
+      const items: PdfPage['items'] = [];
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          items.push(...value.items.flatMap((item: TextItem | TextMarkedContent) => 'str' in item ? [{ text: item.str, x: item.transform[4], y: item.transform[5], width: item.width }] : []));
+        }
+      } finally { reader.releaseLock(); }
+      pages.push({ number, items });
       page.cleanup();
     }
     stage = 'PARSER';
