@@ -26,7 +26,7 @@ The product is private-by-design: each person imports and keeps their own schedu
 - All user-facing interface copy must be in French, including onboarding, buttons, navigation, menus, labels, validation messages, errors, empty states, accessibility labels and installation guidance.
 - Dates, weekdays and human-readable statuses must use French locale conventions (`fr-CH` where locale-specific formatting is needed).
 - Do not introduce Italian or English user-facing copy in new features.
-- The product name **LSD — Lausanne Shift Discovery** may remain unchanged as a brand name.
+- The product name **LSD — Lausanne Shift Discovery** and the brand tagline **A smoother trip through every shift.** are intentional English-language brand exceptions.
 - Source data imported from a planning PDF may retain employer-specific codes where changing them would alter their meaning, but explanatory UI around those codes must be in French.
 
 ## 4. Distribution and installation
@@ -148,9 +148,9 @@ ICS export is a snapshot. After importing a revised PDF, the user exports a new 
 
 - **Product name:** LSD
 - **Expansion:** Lausanne Shift Discovery
-- **French tagline:** *Des trajets plus simples, service après service.*
+- **Tagline:** *A smoother trip through every shift.*
 
-The name is intentionally playful; the product should nevertheless remain professional and useful.
+The name and tagline are intentionally playful; the product should nevertheless remain professional and useful.
 
 ### Theme
 
@@ -239,4 +239,4 @@ Persist data by local user/device only.
 6. A new planning can be merged or replace an overlapping interval without losing unrelated history.
 7. The user can export an ICS calendar with correct Zurich timezone, reminders and overnight shifts.
 8. No schedule data or PDF is sent to a server during normal use.
-9. All user-facing application text is in French, with French date/weekday formatting.
+9. All user-facing application text is in French, except the explicitly defined English brand name/tagline, with French date/weekday formatting.
