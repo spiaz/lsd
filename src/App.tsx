@@ -18,7 +18,7 @@ export function App() {
   const [schedule, setSchedule] = useState<Schedule>(); const [loading, setLoading] = useState(true);
   const [storageReady, setStorageReady] = useState(false); const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ParseResult>(); const [error, setError] = useState('');
-  const [menu, setMenu] = useState(false); const [install, setInstall] = useState(() => { try { return !localStorage.getItem('lsd-install-dismissed'); } catch { return true; } });
+  const [menu, setMenu] = useState(false);
   const [today, setToday] = useState(todayDate); const [selected, setSelected] = useState(today);
   const [month, setMonth] = useState(today.slice(0, 7)); const [detail, setDetail] = useState(false);
 
@@ -67,7 +67,7 @@ export function App() {
     {error && <p role="alert" className="notice error">{error}</p>}
     {loading && <p role="status">{t('loading.schedule')}</p>}
     {busy && <p className="notice" role="status">{t('loading.pdf')}</p>}
-    {menu && !result && <section className="panel menu-panel" aria-label={t('menu.label')}><button disabled={busy} onClick={() => input.current?.click()}><FileUp />{t('menu.update')}</button><button onClick={exportIcs}><CalendarArrowDown />{t('menu.export')}</button><button onClick={() => { setInstall(true); setMenu(false); }}>{t('menu.install')}</button><p className="muted small">{t('menu.exportHelp')}</p>{schedule && <details><summary>{t('menu.savedImports')}</summary>{(schedule.imports || [schedule.metadata]).map((item, index) => <p key={index} className="small filename">{item.sourceFileName}<br />{formatDate(item.coverageStart, undefined, locale)} – {formatDate(item.coverageEnd, undefined, locale)}<br />{t('menu.importedOn', { date: new Intl.DateTimeFormat(intlLocales[locale]).format(new Date(item.importedAt)) })}</p>)}</details>}</section>}
+    {menu && !result && <section className="panel menu-panel" aria-label={t('menu.label')}><button disabled={busy} onClick={() => input.current?.click()}><FileUp />{t('menu.update')}</button><button onClick={exportIcs}><CalendarArrowDown />{t('menu.export')}</button><p className="muted small">{t('menu.exportHelp')}</p>{schedule && <details><summary>{t('menu.savedImports')}</summary>{(schedule.imports || [schedule.metadata]).map((item, index) => <p key={index} className="small filename">{item.sourceFileName}<br />{formatDate(item.coverageStart, undefined, locale)} – {formatDate(item.coverageEnd, undefined, locale)}<br />{t('menu.importedOn', { date: new Intl.DateTimeFormat(intlLocales[locale]).format(new Date(item.importedAt)) })}</p>)}</details>}</section>}
     {result ? <ImportPreview result={result} hasSchedule={!!schedule} locale={locale} onCancel={() => setResult(undefined)} onSave={confirmImport} /> : !loading && !schedule ? <section className="panel onboarding" aria-labelledby="import-title"><div className="hero-icon"><CalendarDays /></div><p className="eyebrow">{t('onboarding.eyebrow')}</p><h2 id="import-title">{t('onboarding.title1')}<br />{t('onboarding.title2')}</h2><p className="intro">{t('onboarding.intro')}</p><button className="primary-action" disabled={busy || !storageReady} onClick={() => input.current?.click()}><FileUp />{t('onboarding.action')}</button><p className="privacy-note"><ShieldCheck />{t('privacy.localFile')}</p></section> : schedule && <>
       {detail ? <DayDetail date={selected} day={daysByDate.get(selected)} locale={locale} onClose={closeDetail} onMove={dayOffset => setSelected(addDays(selected, dayOffset))} /> : <section className="panel calendar" aria-labelledby="month-title">
         <div className="section-heading"><div><p className="eyebrow">{t('calendar.eyebrow')}</p><h2 id="month-title">{formatDate(first, { month: 'long', year: 'numeric' }, locale)}</h2></div><button onClick={() => { setMonth(today.slice(0, 7)); setSelected(today); }}><Target />{t('calendar.today')}</button></div>
@@ -83,7 +83,6 @@ export function App() {
       </section>}
       <p className="privacy-note"><ShieldCheck />{t('privacy.savedOffline')}</p>
     </>}
-    {install && !result && <aside className="install-tip"><div className="section-heading"><strong>{t('install.title')}</strong><button aria-label={t('install.close')} onClick={() => { setInstall(false); try { localStorage.setItem('lsd-install-dismissed', '1'); } catch { /* Dismissal can remain session-only. */ } }}><X /></button></div><p>{/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? t('install.ios') : t('install.other')}</p><p className="small muted">{t('install.privacy')}</p></aside>}
     <footer>LSD <span>·</span> Lausanne Shift Discovery</footer>
   </main>;
 }
