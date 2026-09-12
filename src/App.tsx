@@ -19,7 +19,7 @@ export function App() {
         <div className="brand-mark" aria-hidden="true">LSD</div>
         <div>
           <p className="eyebrow">Lausanne Shift Discovery</p>
-          <h1>Des trajets plus simples, service après service.</h1>
+          <h1>A smoother trip through every shift.</h1>
         </div>
       </header>
 
