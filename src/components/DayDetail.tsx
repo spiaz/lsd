@@ -1,4 +1,4 @@
-import { BusFront, CalendarDays, Clock3, Coffee, Route, Signpost } from 'lucide-react';
+import { BusFront, CalendarDays, Clock3, Coffee, Hash, Route, Signpost, Timer, WalletCards } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 import type { ScheduleDay } from '../domain/schedule';
 import { addDays, displayTime, duration, formatDate, timeMinutes } from '../domain/time';
@@ -22,21 +22,27 @@ function distance(touches: TouchList) {
 function DayCard({ date, day, locale }: { date: string; day?: ScheduleDay; locale: Locale }) {
   const t = translator(locale);
   const shift = day?.status === 'work' ? day.shift : undefined;
+  const daySpan = shift ? timeMinutes(shift.presenceEnd) - timeMinutes(shift.presenceStart) : undefined;
   return <article className="day-card" data-date={date} aria-label={formatDate(date, undefined, locale)}>
     <div className="day-card-heading">
       <div><p className="eyebrow">{formatDate(date, { weekday: 'long' }, locale)}</p><h2>{formatDate(date, undefined, locale)}</h2></div>
-      {shift && <div className="day-summary">
-        <div className="work-pill"><span>{t('day.work')}</span><strong><Clock3 />{duration(shift.workedMinutes)}</strong></div>
-        {shift.pay && <strong className="pay-pill">{t('day.pay', { pay: shift.pay })}</strong>}
-      </div>}
+      {shift && <span className={`shift-kind-pill ${shift.kind}`}><BusFront />{shift.kind === 'split' ? t('day.blocks', { count: shift.blocks.length }) : t('day.oneBlock')}</span>}
     </div>
-    <div className="shift-label">{shift ? <BusFront /> : <Coffee />}<span>{shift ? shift.kind === 'split' ? t('shift.split') : t('shift.single') : day ? statusLabel(day.status, locale) : t('day.none')}</span></div>
+    <div className="shift-label">{shift ? <BusFront /> : <Coffee />}<span>{shift ? shift.kind === 'split' ? t('shift.split') : t('shift.single') : day ? statusLabel(day.status, locale) : t('day.none')}</span>{shift?.serviceId && <strong className="service-id"><Hash />{shift.serviceId}</strong>}</div>
     {!shift && <p className="muted">{day ? day.absenceLabel || t('day.noShift') : t('day.notImported')}</p>}
     {shift && <>
-      <div className="metrics"><div><span><Clock3 />{t('day.presence')}</span><strong>{displayTime(shift.presenceStart)} – {displayTime(shift.presenceEnd)}</strong></div><div><span><Coffee />RR</span><strong>{duration(shift.rrMinutes)}</strong></div><div><span><Route />{t('day.presencePlaces')}</span><strong>{shift.origin || '—'} → {shift.destination || '—'}</strong></div></div>
+      <div className="day-metrics">
+        <div className="wide"><span><Clock3 />{t('day.presence')}</span><strong>{displayTime(shift.presenceStart)} – {displayTime(shift.presenceEnd)}</strong></div>
+        <div><span><Hash />ID</span><strong>{shift.serviceId || '—'}</strong></div>
+        <div><span><Timer />{t('day.work')}</span><strong>{duration(shift.workedMinutes)}</strong></div>
+        <div><span><Coffee />RR</span><strong>{duration(shift.rrMinutes)}</strong></div>
+        <div><span><WalletCards />{t('day.payLabel')}</span><strong>{shift.pay || '—'}</strong></div>
+        <div><span><Clock3 />{t('day.total')}</span><strong>{duration(daySpan)}</strong></div>
+        <div className="wide route-metric"><span><Route />{t('day.presencePlaces')}</span><strong>{shift.origin || '—'} → {shift.destination || '—'}</strong></div>
+      </div>
       {shift.blocks.map((block, i) => <div key={i}>
-        {i > 0 && <p className="pause"><Coffee /> {t('day.pause', { duration: duration(timeMinutes(block.start) - timeMinutes(shift.blocks[i - 1].end)) })}</p>}
-        <section className="block" aria-label={t('day.block', { number: i + 1 })}><div className="section-heading"><h3>{shift.kind === 'split' ? t('day.block', { number: i + 1 }) : t('day.yourTrips')}</h3><span className="muted">{displayTime(block.start)} – {displayTime(block.end)}</span></div>
+        {i > 0 && <div className="pause"><Coffee /><span>{t('day.pauseLabel')}</span><strong>{duration(timeMinutes(block.start) - timeMinutes(shift.blocks[i - 1].end))}</strong></div>}
+        <section className={`block ${shift.kind === 'split' ? 'split-block' : ''}`} aria-label={t('day.block', { number: i + 1 })}><div className="section-heading"><h3>{shift.kind === 'split' && <b className="block-number">{i + 1}</b>}{shift.kind === 'split' ? t('day.block', { number: i + 1 }) : t('day.yourTrips')}</h3><strong className="block-time">{displayTime(block.start)} – {displayTime(block.end)}</strong></div>
           {!block.trips.length && <p className="muted">{t('day.noTrip')}</p>}
           {block.trips.map((trip, j) => <article className="trip" key={j}><div className="trip-time"><strong>{displayTime(trip.start)}</strong><span>{displayTime(trip.end)}</span></div><div className="trip-route"><strong>{trip.origin || t('day.unknownOrigin')} → {trip.destination || t('day.unknownDestination')}</strong><div className="trip-meta"><span><Signpost />{trip.line || t('day.unknownLine')}</span><span><BusFront />{trip.vehicle || t('day.unknownVehicle')}</span></div></div></article>)}
         </section>

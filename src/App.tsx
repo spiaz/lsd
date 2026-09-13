@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BusFront, CalendarDays, CalendarArrowDown, ChevronLeft, ChevronRight, FileUp, Languages, Menu, ShieldCheck, Target, X } from 'lucide-react';
-import type { Schedule } from './domain/schedule';
+import { normalizeScheduleBlocks, type Schedule } from './domain/schedule';
 import { formatDate, addDays, todayDate } from './domain/time';
 import { mergeSchedules } from './domain/merge';
 import { validateSchedule } from './domain/validation';
@@ -26,7 +26,7 @@ export function App() {
   }, [locale]);
   useEffect(() => {
     let active = true;
-    listSchedules().then(saved => { if (active) { setSchedule(saved.find(savedSchedule => savedSchedule.metadata.id === 'active') || saved[0]); setStorageReady(true); } }).catch(() => { if (active) setError(t('error.storage')); }).finally(() => { if (active) setLoading(false); });
+    listSchedules().then(saved => { if (active) { const stored = saved.find(savedSchedule => savedSchedule.metadata.id === 'active') || saved[0]; setSchedule(stored ? normalizeScheduleBlocks(stored) : undefined); setStorageReady(true); } }).catch(() => { if (active) setError(t('error.storage')); }).finally(() => { if (active) setLoading(false); });
     const updateToday = () => setToday(todayDate()); const timer = window.setInterval(updateToday, 60000); document.addEventListener('visibilitychange', updateToday);
     return () => { active = false; clearInterval(timer); document.removeEventListener('visibilitychange', updateToday); };
   }, [t]);
