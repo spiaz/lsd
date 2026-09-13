@@ -25,6 +25,11 @@
 .day-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}
 .day-card-heading .eyebrow{margin-bottom:.3rem}
 .day-card-heading h2{font-size:1.25rem;margin:0;text-transform:capitalize}
+.day-summary{display:flex;align-items:stretch;justify-content:flex-end;flex-wrap:wrap;gap:.45rem}
+.work-pill{display:grid;gap:.15rem;padding:.45rem .65rem;border:1px solid #596078;border-radius:11px;background:#383b4d;line-height:1.1}
+.work-pill span{color:#bfc4d8;font-size:.62rem;font-weight:700;letter-spacing:.055em;text-transform:uppercase}
+.work-pill strong{display:flex;align-items:center;gap:.3rem;color:#f8f8f2;font-size:.82rem;white-space:nowrap}
+.work-pill svg{width:.85rem;height:.85rem;color:#8be9fd}
 .pay-pill{padding:.5rem .7rem;border-radius:11px;background:#444058;color:#ffb86c;font-size:.78rem;line-height:1.2}
 .day-card .shift-label{margin:1rem 0}
 .day-card .metrics{margin-bottom:1rem}
@@ -43,4 +48,6 @@
   .day-stream{padding-left:8px;padding-right:8px}
   .day-card{padding:1rem;border-radius:17px;margin-bottom:.55rem}
   .day-card-heading h2{font-size:1.1rem}
+  .day-card-heading{display:grid;grid-template-columns:1fr}
+  .day-summary{justify-content:flex-start}
 }

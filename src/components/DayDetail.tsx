@@ -25,12 +25,15 @@ function DayCard({ date, day, locale }: { date: string; day?: ScheduleDay; local
   return <article className="day-card" data-date={date} aria-label={formatDate(date, undefined, locale)}>
     <div className="day-card-heading">
       <div><p className="eyebrow">{formatDate(date, { weekday: 'long' }, locale)}</p><h2>{formatDate(date, undefined, locale)}</h2></div>
-      {shift?.pay && <strong className="pay-pill">{t('day.pay', { pay: shift.pay })}</strong>}
+      {shift && <div className="day-summary">
+        <div className="work-pill"><span>{t('day.work')}</span><strong><Clock3 />{duration(shift.workedMinutes)}</strong></div>
+        {shift.pay && <strong className="pay-pill">{t('day.pay', { pay: shift.pay })}</strong>}
+      </div>}
     </div>
     <div className="shift-label">{shift ? <BusFront /> : <Coffee />}<span>{shift ? shift.kind === 'split' ? t('shift.split') : t('shift.single') : day ? statusLabel(day.status, locale) : t('day.none')}</span></div>
     {!shift && <p className="muted">{day ? day.absenceLabel || t('day.noShift') : t('day.notImported')}</p>}
     {shift && <>
-      <div className="metrics"><div><span><Clock3 />{t('day.presence')}</span><strong>{displayTime(shift.presenceStart)} – {displayTime(shift.presenceEnd)}</strong></div><div><span>{t('day.work')}</span><strong>{duration(shift.workedMinutes)}</strong></div><div><span><Coffee />RR</span><strong>{duration(shift.rrMinutes)}</strong></div><div><span><Route />{t('day.presencePlaces')}</span><strong>{shift.origin || '—'} → {shift.destination || '—'}</strong></div></div>
+      <div className="metrics"><div><span><Clock3 />{t('day.presence')}</span><strong>{displayTime(shift.presenceStart)} – {displayTime(shift.presenceEnd)}</strong></div><div><span><Coffee />RR</span><strong>{duration(shift.rrMinutes)}</strong></div><div><span><Route />{t('day.presencePlaces')}</span><strong>{shift.origin || '—'} → {shift.destination || '—'}</strong></div></div>
       {shift.blocks.map((block, i) => <div key={i}>
         {i > 0 && <p className="pause"><Coffee /> {t('day.pause', { duration: duration(timeMinutes(block.start) - timeMinutes(shift.blocks[i - 1].end)) })}</p>}
         <section className="block" aria-label={t('day.block', { number: i + 1 })}><div className="section-heading"><h3>{shift.kind === 'split' ? t('day.block', { number: i + 1 }) : t('day.yourTrips')}</h3><span className="muted">{displayTime(block.start)} – {displayTime(block.end)}</span></div>
