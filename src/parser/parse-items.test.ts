@@ -12,9 +12,15 @@ describe('coordinate parser', () => {
     expect(r.issues).toEqual([]); expect(validateSchedule(s)).toEqual([]);
     expect(s.days[0].shift).toMatchObject({ presenceEnd: '25:31', workedMinutes: 240, rrMinutes: 31, origin: 'Alfa', destination: 'Beta', blocks: [{ trips: [{ line: 'D1', vehicle: 'V-001', origin: 'Alfa', destination: 'Beta', start: '21:10', end: '25:20' }] }] });
   });
+  it('extracts the operational “Tps trav” work-time column', () => {
+    const p = page([[...unique], [...trip]]);
+    p.items.find(i => i.text === 'Travail')!.text = 'Tps trav';
+    const result = parsePdfItems([p], 'synthetic.pdf');
+    expect(result.schedule!.days[0].shift).toMatchObject({ workedMinutes: 240, rrMinutes: 31 });
+  });
   it('parses explicit split block identifiers', () => {
-    const p = page([[['02/10/2026',52],['SPEZZATO',131],['06:00',180],['18:00',226]], [['1',250],['Alfa',332],['06:00',401],['Beta',434],['10:00',504]], [['2',250],['Beta',332],['14:00',401],['Alfa',434],['18:00',504]]]);
-    const r = parsePdfItems([p], 'synthetic.pdf'); expect(r.issues).toEqual([]); expect(r.schedule!.days[0].shift!.blocks).toHaveLength(2); expect(validateSchedule(r.schedule!)).toEqual([]);
+    const p = page([[['02/10/2026',52],['SPEZZATO',131],['06:00',180],['18:00',226],['07:00',535],['01:00',570]], [['1',250],['Alfa',332],['06:00',401],['Beta',434],['10:00',504]], [['2',250],['Beta',332],['14:00',401],['Alfa',434],['18:00',504]]]);
+    const r = parsePdfItems([p], 'synthetic.pdf'); expect(r.issues).toEqual([]); expect(r.schedule!.days[0].shift!.blocks).toHaveLength(2); expect(r.schedule!.days[0].shift!.workedMinutes).toBe(420); expect(validateSchedule(r.schedule!)).toEqual([]);
   });
   it('requires review for a split without explicit block identifiers', () => { const p = page([[['02/10/2026',52],['SPEZZATO',131],['06:00',180],['18:00',226]]]); p.items = p.items.filter(i => i.text !== 'Bloc'); expect(parsePdfItems([p], 'synthetic.pdf').issues.some(i => i.code === 'SPLIT')).toBe(true); });
   it('distinguishes rest and compensatory rest', () => { const r = parsePdfItems([page([[['01/10/2026',52],['RIPOSO',131]], [['02/10/2026',52],['RR',131]]])], 'synthetic.pdf'); expect(r.schedule!.days.map(d => d.status)).toEqual(['rest','compensatory-rest']); });
