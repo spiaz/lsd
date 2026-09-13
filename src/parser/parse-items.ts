@@ -1,4 +1,4 @@
-import { inferSplitBlocks, type ParseIssue, type ParseResult, type ScheduleDay, type Trip } from '../domain/schedule';
+import { effectiveWorkedMinutes, hasCompleteBlockCoverage, inferSplitBlocks, type ParseIssue, type ParseResult, type ScheduleDay, type Trip } from '../domain/schedule';
 import { validDate } from '../domain/time';
 import { translator, type Locale } from '../i18n';
 export interface PdfItem { text: string; x: number; y: number; width: number }
@@ -60,7 +60,10 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
     const presStart = synthetic ? get('pres. debut')[0] : starts[0];
     const presEnd = synthetic ? (get('pres. fin')[0] || get('p. fin')[0]) : ends[0];
     const tripStart = synthetic ? starts[0] : starts[1], tripEnd = synthetic ? ends[0] : ends[1];
-    const workHeader = headers.find(i => clean(i.text).startsWith('trav'));
+    // The operational planning abbreviates this heading as “Tps trav”.
+    // Older exports simply use “Travail”; accept both without relying on the
+    // column position.
+    const workHeader = headers.find(i => /^(trav|tps\b)/.test(clean(i.text)));
     const payHeader = headers.find(i => clean(i.text).startsWith('pay'));
     for (let r = 0; r < rows.length; r++) {
       const row = rows[r], reference = t('parser.row', { page: page.number, row: r + 1 });
@@ -132,7 +135,16 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
   }
   flushUnknownStatus();
   // Operational PDFs have no block-number column, so infer the split from trip gaps.
-  for (const day of days) if (day.shift) day.shift = inferSplitBlocks(day.shift);
+  // When the block bounds cover the whole presence, derive the effective work
+  // time from those bounds. This excludes split pauses and RR and avoids
+  // trusting a misaligned "Travail" cell in the source PDF.
+  for (const day of days) if (day.shift) {
+    const shift = inferSplitBlocks(day.shift);
+    const calculated = hasCompleteBlockCoverage(shift) ? effectiveWorkedMinutes(shift) : undefined;
+    day.shift = shift.workedMinutes === undefined && calculated !== undefined
+      ? { ...shift, workedMinutes: calculated }
+      : shift;
+  }
   const sorted = [...days].sort((a, b) => a.date.localeCompare(b.date));
   if (!sorted.length) return { issues: [{ severity: 'error', code: anyText ? 'NO_DAYS' : 'SCAN', message: anyText ? t('parser.noDays') : t('parser.scan') }, ...issues] };
   return { schedule: { metadata: { id: crypto.randomUUID(), sourceFileName: filename, importedAt: new Date().toISOString(), coverageStart: sorted[0].date, coverageEnd: sorted.at(-1)!.date }, days: sorted }, issues };
