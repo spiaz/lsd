@@ -60,7 +60,9 @@ export function DayDetail({ date, days, coverageStart, coverageEnd, locale, onCl
 
   useEffect(() => {
     const target = view.current?.querySelector<HTMLElement>(`[data-date="${initialDate.current}"]`);
-    target?.scrollIntoView({ block: 'start' });
+    // jsdom (used by the test suite) does not implement scrolling APIs.
+    // Guarding this also keeps the detail view usable in limited web views.
+    target?.scrollIntoView?.({ block: 'start' });
   }, []);
 
   useEffect(() => {
