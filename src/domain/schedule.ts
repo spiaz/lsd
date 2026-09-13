@@ -24,6 +24,38 @@ export interface ParseIssue {
 }
 export interface ParseResult { schedule?: Schedule; issues: ParseIssue[] }
 
+/**
+ * The paid working time is the time spent in service blocks, less the RR
+ * (meal/rest) time recorded for the shift.  It intentionally excludes the
+ * gap between split blocks: that gap is not part of a driver's work day.
+ *
+ * Return undefined for incomplete times, so callers can retain an explicitly
+ * entered value rather than silently manufacturing one.
+ */
+export function effectiveWorkedMinutes(shift: WorkShift): number | undefined {
+  try {
+    const blockMinutes = shift.blocks.reduce((total, block) => {
+      const minutes = timeMinutes(block.end) - timeMinutes(block.start);
+      if (minutes < 0) throw new Error('Invalid block range');
+      return total + minutes;
+    }, 0);
+    return Math.max(0, blockMinutes - (shift.rrMinutes || 0));
+  } catch {
+    return undefined;
+  }
+}
+
+/** A derived duration is safe only when blocks cover the full presence span. */
+export function hasCompleteBlockCoverage(shift: WorkShift): boolean {
+  if (!shift.blocks.length) return false;
+  try {
+    return timeMinutes(shift.blocks[0].start) === timeMinutes(shift.presenceStart)
+      && timeMinutes(shift.blocks.at(-1)!.end) === timeMinutes(shift.presenceEnd);
+  } catch {
+    return false;
+  }
+}
+
 /** Preserve the original MVP rule for operational PDFs that do not expose block IDs. */
 export function inferSplitBlocks(shift: WorkShift): WorkShift {
   if (shift.blocks.length !== 1 || shift.blocks[0].trips.length < 2) return shift;
