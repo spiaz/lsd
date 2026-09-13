@@ -1,4 +1,4 @@
-import type { ParseIssue, ParseResult, ScheduleDay, Trip } from '../domain/schedule';
+import { inferSplitBlocks, type ParseIssue, type ParseResult, type ScheduleDay, type Trip } from '../domain/schedule';
 import { validDate } from '../domain/time';
 import { translator, type Locale } from '../i18n';
 export interface PdfItem { text: string; x: number; y: number; width: number }
@@ -23,6 +23,7 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
   const t = translator(locale);
   const days: ScheduleDay[] = [], issues: ParseIssue[] = [];
   let current: ScheduleDay | undefined;
+  let currentServiceId = '';
   let pendingUnknownStatus: { day: ScheduleDay; reference: string } | undefined;
   let anyText = false;
   const warn = (code: string, message: string, reference: string, day = current) => issues.push({ severity: 'warning', code, message, sourceReference: reference, date: day?.date });
@@ -70,24 +71,29 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
       if (date) {
         flushUnknownStatus();
         current = { date, status: 'work', sourceReference: reference };
+        currentServiceId = '';
         days.push(current);
       }
       if (!current) continue;
       const a = read(row, presStart), b = read(row, presEnd);
       const tStart = read(row, tripStart), tEnd = read(row, tripEnd);
+      const serviceId = read(row, get('service')[0]);
       const time = (s: string) => /^\d{1,2}:\d{2}$/.test(s);
       if (date && !time(a) && !time(b)) {
         const statusText = synthetic ? read(row, get('type')[0]) : row.filter(i => i.x > dateHeader.x + dateHeader.width && i.x < origins[0].x - 5).map(i => i.text).join(' ').trim();
         const candidates = new Set(row.filter(i => i.x > dateHeader.x + dateHeader.width && i.x < (origins[0]?.x ?? 180) - 5).map(i => statuses[clean(i.text)]).filter(Boolean));
         const status = statuses[clean(statusText)] || (candidates.size === 1 ? [...candidates][0] : undefined);
+        if (!status && serviceId) currentServiceId = serviceId;
         current.status = status || 'absence'; current.absenceLabel = statusText;
         if (status) pendingUnknownStatus = undefined;
         else pendingUnknownStatus = { day: current, reference };
         continue;
       }
       if (time(a) || time(b)) {
+        currentServiceId ||= serviceId;
         if (pendingUnknownStatus?.day === current) pendingUnknownStatus = undefined;
-        const shift = current.shift ||= { kind: 'single', presenceStart: a, presenceEnd: b, blocks: [] };
+        const shift = current.shift ||= { kind: 'single', presenceStart: a, presenceEnd: b, serviceId: currentServiceId || undefined, blocks: [] };
+        shift.serviceId ||= currentServiceId || undefined;
         current.status = 'work';
         shift.presenceEnd = b;
         shift.blocks.push({ ordinal: shift.blocks.length + 1, start: a, end: b, trips: [] });
@@ -125,6 +131,8 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
     }
   }
   flushUnknownStatus();
+  // Operational PDFs have no block-number column, so infer the split from trip gaps.
+  for (const day of days) if (day.shift) day.shift = inferSplitBlocks(day.shift);
   const sorted = [...days].sort((a, b) => a.date.localeCompare(b.date));
   if (!sorted.length) return { issues: [{ severity: 'error', code: anyText ? 'NO_DAYS' : 'SCAN', message: anyText ? t('parser.noDays') : t('parser.scan') }, ...issues] };
   return { schedule: { metadata: { id: crypto.randomUUID(), sourceFileName: filename, importedAt: new Date().toISOString(), coverageStart: sorted[0].date, coverageEnd: sorted.at(-1)!.date }, days: sorted }, issues };

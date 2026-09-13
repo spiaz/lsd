@@ -31,14 +31,25 @@ describe('operational column layout', () => {
     const labels = ['Date', 'Service', 'De', 'Début', 'À', 'Fin', 'Ligne', 'Voiture', 'De', 'Début', 'À', 'Fin', 'Travail', 'RR'];
     const cell = (text: string, column: number, y: number) => ({ text, x: column * 60 + 20 - text.length, y, width: text.length * 2 });
     return { number: 1, items: [...labels.map((t, i) => cell(t, i, 800)), ...[
-      ['01/10/2026', 0, 780], ['Depot A', 2, 780], ['06:00', 3, 780], ['Depot B', 4, 780], ['18:00', 5, 780],
+      ['01/10/2026', 0, 780], ['SERV-42', 1, 780], ['Depot A', 2, 780], ['06:00', 3, 780], ['Depot B', 4, 780], ['18:00', 5, 780],
       ['L1', 6, 780], ['V1', 7, 780], ['Stop A', 8, 780], ['06:10', 9, 780], ['Stop B', 10, 780], ['17:50', 11, 780], ...extra,
     ].map(([t, i, y]) => cell(String(t), Number(i), Number(y)))] };
   }
   it('preserves presence stations independently of the first and last trips', () => {
     const result = parsePdfItems([operational()], 'synthetic.pdf');
     expect(result.issues).toEqual([]);
-    expect(result.schedule!.days[0].shift).toMatchObject({ origin: 'Depot A', destination: 'Depot B', blocks: [{ trips: [{ origin: 'Stop A', destination: 'Stop B' }] }] });
+    expect(result.schedule!.days[0].shift).toMatchObject({ serviceId: 'SERV-42', origin: 'Depot A', destination: 'Depot B', blocks: [{ trips: [{ origin: 'Stop A', destination: 'Stop B' }] }] });
+  });
+  it('restores the MVP split rule when consecutive trips have a one-hour gap', () => {
+    const p = operational();
+    const cell = (text: string, column: number, y: number) => ({ text, x: column * 60 + 20 - text.length, y, width: text.length * 2 });
+    p.items.find(i => i.text === '17:50')!.text = '08:00';
+    p.items.push(cell('L2', 6, 760), cell('V2', 7, 760), cell('Stop B', 8, 760), cell('09:00', 9, 760), cell('Stop C', 10, 760), cell('12:00', 11, 760));
+    const result = parsePdfItems([p], 'synthetic.pdf');
+    expect(result.issues).toEqual([]);
+    expect(result.schedule!.days[0].shift).toMatchObject({ kind: 'split', blocks: [
+      { ordinal: 1, start: '06:10', end: '08:00' }, { ordinal: 2, start: '09:00', end: '12:00' },
+    ] });
   });
   it('does not flag a service code as an unknown day code when shift details continue on the next row', () => {
     const p = operational();

@@ -124,6 +124,9 @@ Show, when present:
 - each trip/leg: line, start, end, route and vehicle;
 - pauses between split blocks.
 
+For operational PDFs without explicit block identifiers, preserve the original MVP rule:
+consecutive trip groups separated by at least 60 minutes are shown as two distinct blocks.
+
 Normalize overnight time for human display. For example, source time `25:31` must display as `01:31 (+1)`, while the underlying data and calendar export use the following date correctly.
 
 Rest, holiday, leave and compensatory rest must be shown as day-level statuses, not empty work shifts.
