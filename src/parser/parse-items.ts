@@ -119,8 +119,8 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
         const trip: Trip = { start: tStart, end: tEnd, line: read(row, get('ligne')[0]), vehicle: read(row, get('voiture')[0]), origin: read(row, synthetic ? origins[0] : origins[1]), destination: read(row, synthetic ? destinations[0] : destinations[1]) };
         if (synthetic && current.shift.kind === 'split' && get('bloc').length) {
           const ordinal = Number(read(row, get('bloc')[0]));
-          if (ordinal !== 1 && ordinal !== 2) warn('BLOCK_ID', t('parser.blockId'), reference);
-          const id = ordinal === 2 ? 2 : 1;
+          if (!Number.isInteger(ordinal) || ordinal < 1) warn('BLOCK_ID', t('parser.blockId'), reference);
+          const id = Number.isInteger(ordinal) && ordinal > 0 ? ordinal : 1;
           let block = current.shift.blocks.find(b => b.ordinal === id);
           if (!block) { block = { ordinal: id, start: trip.start, end: trip.end, trips: [] }; current.shift.blocks.push(block); }
           if (!block.trips.length) block.start = trip.start;
