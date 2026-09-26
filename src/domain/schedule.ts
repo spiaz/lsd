@@ -56,21 +56,23 @@ export function hasCompleteBlockCoverage(shift: WorkShift): boolean {
   }
 }
 
-/** Preserve the original MVP rule for operational PDFs that do not expose block IDs. */
+/** Split at every pause of at least an hour, including within previously saved blocks. */
 export function inferSplitBlocks(shift: WorkShift): WorkShift {
-  if (shift.blocks.length !== 1 || shift.blocks[0].trips.length < 2) return shift;
-  const trips = [...shift.blocks[0].trips].sort((a, b) => timeMinutes(a.start) - timeMinutes(b.start));
-  let splitAt = -1, largestGap = 59;
-  for (let i = 1; i < trips.length; i++) {
-    const gap = timeMinutes(trips[i].start) - timeMinutes(trips[i - 1].end);
-    if (gap >= 60 && gap > largestGap) { largestGap = gap; splitAt = i; }
-  }
-  if (splitAt < 0) return shift;
-  const first = trips.slice(0, splitAt), second = trips.slice(splitAt);
-  return { ...shift, kind: 'split', blocks: [
-    { ordinal: 1, start: first[0].start, end: first.at(-1)!.end, trips: first },
-    { ordinal: 2, start: second[0].start, end: second.at(-1)!.end, trips: second },
-  ] };
+  let changed = false;
+  const blocks = shift.blocks.flatMap(block => {
+    if (block.trips.length < 2) return [block];
+    const trips = [...block.trips].sort((a, b) => timeMinutes(a.start) - timeMinutes(b.start));
+    const groups: Trip[][] = [[trips[0]]];
+    for (const trip of trips.slice(1)) {
+      const previous = groups.at(-1)!;
+      if (timeMinutes(trip.start) - timeMinutes(previous.at(-1)!.end) >= 60) groups.push([]);
+      groups.at(-1)!.push(trip);
+    }
+    if (groups.length === 1) return [block];
+    changed = true;
+    return groups.map(group => ({ ordinal: 0, start: group[0].start, end: group.at(-1)!.end, trips: group }));
+  });
+  return changed ? { ...shift, kind: 'split', blocks: blocks.map((block, i) => ({ ...block, ordinal: i + 1 })) } : shift;
 }
 
 export function normalizeScheduleBlocks(schedule: Schedule): Schedule {
