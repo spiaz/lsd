@@ -26,7 +26,7 @@ export function validateSchedule(schedule: Schedule, locale: Locale = 'fr'): Par
       } catch { issue(t('validation.time'), 'TIME', d); return null; }
     }
     const presence = range(shift.presenceStart, shift.presenceEnd);
-    if (shift.blocks.length !== (shift.kind === 'single' ? 1 : 2)) issue(t('validation.blocks'), 'BLOCKS', d);
+    if (shift.kind === 'single' ? shift.blocks.length !== 1 : shift.blocks.length < 2) issue(t('validation.blocks'), 'BLOCKS', d);
     let previous = -1;
     for (const block of shift.blocks) {
       const span = range(block.start, block.end);
