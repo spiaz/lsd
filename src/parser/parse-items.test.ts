@@ -18,6 +18,13 @@ describe('coordinate parser', () => {
     const result = parsePdfItems([p], 'synthetic.pdf');
     expect(result.schedule!.days[0].shift).toMatchObject({ workedMinutes: 240, rrMinutes: 31 });
   });
+  it('does not substitute presence duration when the work-time cell is missing', () => {
+    const p = page([[...unique], [...trip]]);
+    p.items = p.items.filter(i => i.text !== '04:00');
+    const result = parsePdfItems([p], 'synthetic.pdf');
+    expect(result.schedule!.days[0].shift!.workedMinutes).toBeUndefined();
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'WORKED', date: '2026-10-01' }));
+  });
   it('parses explicit split block identifiers', () => {
     const p = page([[['02/10/2026',52],['SPEZZATO',131],['06:00',180],['18:00',226],['07:00',535],['01:00',570]], [['1',250],['Alfa',332],['06:00',401],['Beta',434],['10:00',504]], [['2',250],['Beta',332],['14:00',401],['Alfa',434],['18:00',504]]]);
     const r = parsePdfItems([p], 'synthetic.pdf'); expect(r.issues).toEqual([]); expect(r.schedule!.days[0].shift!.blocks).toHaveLength(2); expect(r.schedule!.days[0].shift!.workedMinutes).toBe(420); expect(validateSchedule(r.schedule!)).toEqual([]);
@@ -38,13 +45,21 @@ describe('operational column layout', () => {
     const cell = (text: string, column: number, y: number) => ({ text, x: column * 60 + 20 - text.length, y, width: text.length * 2 });
     return { number: 1, items: [...labels.map((t, i) => cell(t, i, 800)), ...[
       ['01/10/2026', 0, 780], ['SERV-42', 1, 780], ['Depot A', 2, 780], ['06:00', 3, 780], ['Depot B', 4, 780], ['18:00', 5, 780],
-      ['L1', 6, 780], ['V1', 7, 780], ['Stop A', 8, 780], ['06:10', 9, 780], ['Stop B', 10, 780], ['17:50', 11, 780], ...extra,
+      ['L1', 6, 780], ['V1', 7, 780], ['Stop A', 8, 780], ['06:10', 9, 780], ['Stop B', 10, 780], ['17:50', 11, 780], ['07:15', 12, 780], ...extra,
     ].map(([t, i, y]) => cell(String(t), Number(i), Number(y)))] };
   }
   it('preserves presence stations independently of the first and last trips', () => {
     const result = parsePdfItems([operational()], 'synthetic.pdf');
     expect(result.issues).toEqual([]);
     expect(result.schedule!.days[0].shift).toMatchObject({ serviceId: 'SERV-42', origin: 'Depot A', destination: 'Depot B', blocks: [{ trips: [{ origin: 'Stop A', destination: 'Stop B' }] }] });
+  });
+  it('reads Tps Trav. split across PDF items and keeps total presence separate', () => {
+    const p = operational([['00:30', 13, 780]]);
+    p.items = p.items.filter(i => i.text !== 'Travail');
+    p.items.push({ text: 'Tps', x: 731, y: 806, width: 17 }, { text: 'Trav.', x: 734, y: 798, width: 22 });
+    const result = parsePdfItems([p], 'synthetic.pdf');
+    expect(result.issues).toEqual([]);
+    expect(result.schedule!.days[0].shift).toMatchObject({ workedMinutes: 435, rrMinutes: 30, presenceStart: '06:00', presenceEnd: '18:00' });
   });
   it('restores the MVP split rule when consecutive trips have a one-hour gap', () => {
     const p = operational();
