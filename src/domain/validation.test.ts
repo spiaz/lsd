@@ -23,12 +23,14 @@ describe('schedule validation', () => {
     ]);
     expect(validateSchedule(restored)).toEqual([]);
   });
-  it('keeps a 29-minute turnaround within one block', () => {
+  it('keeps a 14-minute turnaround within one block and splits at 15 minutes', () => {
     const shift = sampleSchedule().days[0].shift!;
     shift.blocks[0].trips = [
-      { start: '21:00', end: '22:00' }, { start: '22:29', end: '25:31' },
+      { start: '21:00', end: '22:00' }, { start: '22:14', end: '25:31' },
     ];
     expect(inferSplitBlocks(shift).blocks).toHaveLength(1);
+    shift.blocks[0].trips[1].start = '22:15';
+    expect(inferSplitBlocks(shift).blocks).toHaveLength(2);
   });
   it('bounds malformed or excessive coverage', () => { const s = sampleSchedule(); s.metadata.coverageEnd = '2099-01-01'; expect(validateSchedule(s)).toEqual([expect.objectContaining({ code: 'COVERAGE' })]); });
 });

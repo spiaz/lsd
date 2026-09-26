@@ -125,7 +125,7 @@ Show, when present:
 - pauses between split blocks.
 
 For operational PDFs without explicit block identifiers, preserve the original MVP rule:
-each gap of at least 30 minutes between consecutive trips starts a new block; a day may have three or more blocks.
+each gap of at least 15 minutes between consecutive trips starts a new block; a day may have three or more blocks.
 
 Normalize overnight time for human display. For example, source time `25:31` must display as `01:31 (+1)`, while the underlying data and calendar export use the following date correctly.
 

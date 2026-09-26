@@ -56,7 +56,7 @@ export function hasCompleteBlockCoverage(shift: WorkShift): boolean {
   }
 }
 
-/** Split at every pause of at least 30 minutes, including within previously saved blocks. */
+/** Split at every pause of at least 15 minutes, including within previously saved blocks. */
 export function inferSplitBlocks(shift: WorkShift): WorkShift {
   let changed = false;
   const blocks = shift.blocks.flatMap(block => {
@@ -65,7 +65,7 @@ export function inferSplitBlocks(shift: WorkShift): WorkShift {
     const groups: Trip[][] = [[trips[0]]];
     for (const trip of trips.slice(1)) {
       const previous = groups.at(-1)!;
-      if (timeMinutes(trip.start) - timeMinutes(previous.at(-1)!.end) >= 30) groups.push([]);
+      if (timeMinutes(trip.start) - timeMinutes(previous.at(-1)!.end) >= 15) groups.push([]);
       groups.at(-1)!.push(trip);
     }
     if (groups.length === 1) return [block];
