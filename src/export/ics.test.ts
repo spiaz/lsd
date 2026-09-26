@@ -4,6 +4,19 @@ import { foldLine, scheduleIcsText } from './ics';
 describe('ICS export', () => {
   it('exports operational overnight time on the following date in Zurich', () => { const ics = scheduleIcsText(sampleSchedule()); expect(ics).toContain('DTEND;TZID=Europe/Zurich:20261002T013100'); expect(ics).toContain('BEGIN:VTIMEZONE'); expect(ics).toContain('TZOFFSETTO:+0200'); expect(ics).toContain('TZOFFSETTO:+0100'); });
   it('exports two separate split events, and reminders only for timed events', () => { const ics = scheduleIcsText(sampleSchedule()); expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(4); expect(ics.match(/TRIGGER:-PT2H/g)).toHaveLength(3); expect(ics).toContain('DTSTART;TZID=Europe/Zurich:20261002T140000'); });
+  it('exports every block of a three-block shift', () => {
+    const schedule = sampleSchedule();
+    const shift = schedule.days[1].shift!;
+    shift.blocks = [
+      { ordinal: 1, start: '06:00', end: '08:00', trips: [] },
+      { ordinal: 2, start: '09:00', end: '12:00', trips: [] },
+      { ordinal: 3, start: '14:00', end: '18:00', trips: [] },
+    ];
+    const ics = scheduleIcsText(schedule);
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(5);
+    expect(ics).toContain('DTSTART;TZID=Europe/Zurich:20261002T090000');
+    expect(ics).toContain('DTSTART;TZID=Europe/Zurich:20261002T140000');
+  });
   it('uses exclusive next-day all-day end', () => { const ics = scheduleIcsText(sampleSchedule()); expect(ics).toContain('DTSTART;VALUE=DATE:20261003'); expect(ics).toContain('DTEND;VALUE=DATE:20261004'); });
   it('escapes content and prevents injected ICS properties', () => { const s = sampleSchedule(); s.metadata.displayName = 'Demo,;\\\nEND:VEVENT'; const ics = scheduleIcsText(s); expect(ics).toContain('Demo\\,\\;\\\\\\nEND:VEVENT'); expect(ics.match(/\r\nEND:VEVENT/g)).toHaveLength(4); });
   it('folds UTF-8 lines without splitting characters or exceeding 75 bytes', () => { const text = 'SUMMARY:' + 'è🚍'.repeat(40); const folded = foldLine(text); expect(folded.split('\r\n').every(line => new TextEncoder().encode(line).length <= 75)).toBe(true); expect(folded.replace(/\r\n /g, '')).toBe(text); });

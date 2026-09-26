@@ -57,6 +57,19 @@ describe('operational column layout', () => {
       { ordinal: 1, start: '06:10', end: '08:00' }, { ordinal: 2, start: '09:00', end: '12:00' },
     ] });
   });
+  it('detects three blocks when two trip gaps reach an hour', () => {
+    const p = operational();
+    const cell = (text: string, column: number, y: number) => ({ text, x: column * 60 + 20 - text.length, y, width: text.length * 2 });
+    p.items.find(i => i.text === '17:50')!.text = '08:00';
+    p.items.push(cell('L2', 6, 760), cell('V2', 7, 760), cell('Stop B', 8, 760), cell('09:00', 9, 760), cell('Stop C', 10, 760), cell('12:00', 11, 760));
+    p.items.push(cell('L3', 6, 740), cell('V3', 7, 740), cell('Stop C', 8, 740), cell('13:30', 9, 740), cell('Stop D', 10, 740), cell('17:50', 11, 740));
+    const result = parsePdfItems([p], 'synthetic.pdf');
+    expect(result.issues).toEqual([]);
+    expect(result.schedule!.days[0].shift!.blocks.map(b => [b.start, b.end])).toEqual([
+      ['06:10', '08:00'], ['09:00', '12:00'], ['13:30', '17:50'],
+    ]);
+    expect(validateSchedule(result.schedule!)).toEqual([]);
+  });
   it('does not flag a service code as an unknown day code when shift details continue on the next row', () => {
     const p = operational();
     const cell = (text: string, column: number, y: number) => ({ text, x: column * 60 + 20 - text.length, y, width: text.length * 2 });
