@@ -1,4 +1,4 @@
-import { effectiveWorkedMinutes, hasCompleteBlockCoverage, inferSplitBlocks, type ParseIssue, type ParseResult, type ScheduleDay, type Trip } from '../domain/schedule';
+import { inferSplitBlocks, type ParseIssue, type ParseResult, type ScheduleDay, type Trip } from '../domain/schedule';
 import { validDate } from '../domain/time';
 import { translator, type Locale } from '../i18n';
 export interface PdfItem { text: string; x: number; y: number; width: number }
@@ -60,10 +60,25 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
     const presStart = synthetic ? get('pres. debut')[0] : starts[0];
     const presEnd = synthetic ? (get('pres. fin')[0] || get('p. fin')[0]) : ends[0];
     const tripStart = synthetic ? starts[0] : starts[1], tripEnd = synthetic ? ends[0] : ends[1];
-    // The operational planning abbreviates this heading as “Tps trav”.
-    // Older exports simply use “Travail”; accept both without relying on the
-    // column position.
-    const workHeader = headers.find(i => /^(trav|tps\b)/.test(clean(i.text)));
+    // In operational exports “Tps Trav.” can be split into two PDF text items
+    // or printed on a second header line. Find its column by the label, then
+    // read the cell between the final trip time and RR column boundaries.
+    const headerBand = items.filter(i => Math.abs(i.y - dateHeader.y) <= 12);
+    const workHeader = headerBand.find(i => /^(trav(ail)?\.?|tps\s*trav\.?|tps)$/i.test(clean(i.text)));
+    const rrHeader = get('rr')[0];
+    const lastTripEnd = tripEnd;
+    const workColumnCenter = rrHeader && (lastTripEnd.x + lastTripEnd.width / 2 + rrHeader.x + rrHeader.width / 2) / 2;
+    const readWorked = (row: PdfItem[]) => {
+      if (!workHeader) return '';
+      if (synthetic) return read(row, workHeader);
+      const left = lastTripEnd.x + lastTripEnd.width / 2;
+      const right = rrHeader && rrHeader.x + rrHeader.width / 2;
+      if (!right || right <= left) return read(row, workHeader);
+      const center = (left + right) / 2;
+      const lo = (left + center) / 2, hi = (center + right) / 2;
+      return row.filter(i => i.x + i.width / 2 >= lo && i.x + i.width / 2 < hi)
+        .sort((a, b) => a.x - b.x).map(i => i.text).join(' ').trim();
+    };
     const payHeader = headers.find(i => clean(i.text).startsWith('pay'));
     for (let r = 0; r < rows.length; r++) {
       const row = rows[r], reference = t('parser.row', { page: page.number, row: r + 1 });
@@ -105,7 +120,11 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
           shift.origin ||= read(row, origins[0]); shift.destination = read(row, destinations[0]);
           if (!read(row, origins[0]) || !shift.destination) warn('PRESENCE_ROUTE', t('parser.presenceRoute'), reference);
         }
-        const worked = read(row, workHeader), rr = read(row, get('rr')[0]);
+        const worked = readWorked(row);
+        const rr = !synthetic && workColumnCenter && rrHeader
+          ? row.filter(i => i.x + i.width / 2 >= (workColumnCenter + rrHeader.x + rrHeader.width / 2) / 2)
+            .sort((a, b) => a.x - b.x).map(i => i.text).join(' ').trim()
+          : read(row, rrHeader);
         if (worked) { const value = minutes(worked); if (value === undefined) warn('WORKED', t('parser.worked'), reference); else shift.workedMinutes = (shift.workedMinutes || 0) + value; }
         if (rr) { const value = minutes(rr); if (value === undefined) warn('RR', t('parser.rr'), reference); else shift.rrMinutes = (shift.rrMinutes || 0) + value; }
         const pay = read(row, payHeader); if (pay) shift.pay = shift.pay ? `${shift.pay} + ${pay}` : pay;
@@ -134,16 +153,11 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
     }
   }
   flushUnknownStatus();
-  // Operational PDFs have no block-number column, so infer the split from trip gaps.
-  // When the block bounds cover the whole presence, derive the effective work
-  // time from those bounds. This excludes split pauses and RR and avoids
-  // trusting a misaligned "Travail" cell in the source PDF.
+  // Work time comes only from the PDF's Tps Trav. column. Presence and block
+  // spans include pauses and must never be substituted for missing source data.
   for (const day of days) if (day.shift) {
-    const shift = inferSplitBlocks(day.shift);
-    const calculated = hasCompleteBlockCoverage(shift) ? effectiveWorkedMinutes(shift) : undefined;
-    day.shift = shift.workedMinutes === undefined && calculated !== undefined
-      ? { ...shift, workedMinutes: calculated }
-      : shift;
+    day.shift = inferSplitBlocks(day.shift);
+    if (day.shift.workedMinutes === undefined) warn('WORKED', t('parser.worked'), day.sourceReference || '', day);
   }
   const sorted = [...days].sort((a, b) => a.date.localeCompare(b.date));
   if (!sorted.length) return { issues: [{ severity: 'error', code: anyText ? 'NO_DAYS' : 'SCAN', message: anyText ? t('parser.noDays') : t('parser.scan') }, ...issues] };
