@@ -122,7 +122,12 @@ export function parsePdfItems(pages: PdfPage[], filename: string, locale: Locale
         }
         const worked = readWorked(row);
         const rr = !synthetic && workColumnCenter && rrHeader
-          ? row.filter(i => i.x + i.width / 2 >= (workColumnCenter + rrHeader.x + rrHeader.width / 2) / 2)
+          ? row.filter(i => {
+            const center = i.x + i.width / 2;
+            const rrCenter = rrHeader.x + rrHeader.width / 2;
+            return center >= (workColumnCenter + rrCenter) / 2
+              && (!payHeader || center < (rrCenter + payHeader.x + payHeader.width / 2) / 2);
+          })
             .sort((a, b) => a.x - b.x).map(i => i.text).join(' ').trim()
           : read(row, rrHeader);
         if (worked) { const value = minutes(worked); if (value === undefined) warn('WORKED', t('parser.worked'), reference); else shift.workedMinutes = (shift.workedMinutes || 0) + value; }
