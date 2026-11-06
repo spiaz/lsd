@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BusFront, CalendarDays, CalendarArrowDown, ChevronLeft, ChevronRight, FileUp, Languages, Menu, ShieldCheck, Target, X } from 'lucide-react';
-import { normalizeScheduleBlocks, type Schedule } from './domain/schedule';
+import { normalizeScheduleBlocks, type ParseResult, type Schedule } from './domain/schedule';
 import { formatDate, addDays, todayDate } from './domain/time';
-import { mergeSchedules } from './domain/merge';
+import { mergeSchedules, type MergeMode } from './domain/merge';
 import { validateSchedule } from './domain/validation';
 import { listSchedules, saveSchedule } from './storage/database';
 import { parseSchedulePdf } from './parser/schedule-parser';
 import { exportScheduleAsIcs } from './export/ics';
 import { DayDetail } from './components/DayDetail';
+import { ImportPreview } from './components/ImportPreview';
 import { intlLocales, isLocale, statusLabel, supportedLocales, translator, type Locale } from './i18n';
 
 export function App() {
@@ -16,6 +17,7 @@ export function App() {
   const t = useMemo(() => translator(locale), [locale]);
   const [schedule, setSchedule] = useState<Schedule>(); const [loading, setLoading] = useState(true);
   const [storageReady, setStorageReady] = useState(false); const [busy, setBusy] = useState(false);
+  const [importResult, setImportResult] = useState<ParseResult>();
   const [error, setError] = useState(''); const [menu, setMenu] = useState(false);
   const [today, setToday] = useState(todayDate); const [selected, setSelected] = useState(today);
   const [month, setMonth] = useState(today.slice(0, 7)); const [detail, setDetail] = useState(false);
@@ -38,18 +40,22 @@ export function App() {
     setBusy(true);
     try {
       const result = await parseSchedulePdf(file, locale);
-      if (!result.schedule || result.issues.some(issue => issue.severity === 'error') || validateSchedule(result.schedule, locale).some(issue => issue.severity === 'error')) {
-        setError(t('error.fixBeforeSave'));
+      if (!result.schedule || result.issues.length || validateSchedule(result.schedule, locale).length) {
+        setImportResult(result);
         return;
       }
-      const next = mergeSchedules(schedule, result.schedule, schedule ? 'replace' : 'add', locale);
-      await saveSchedule(next);
-      setSchedule(next); setSelected(today); setMonth(today.slice(0, 7)); setDetail(false);
+      await saveImport(result.schedule, schedule ? 'replace' : 'add');
     } catch (importError) {
       setError(importError instanceof Error && importError.message ? importError.message : t('error.readPdf'));
     } finally {
       setBusy(false); if (input.current) input.current.value = '';
     }
+  }
+  async function saveImport(incoming: Schedule, mode: MergeMode) {
+    if (validateSchedule(incoming, locale).some(issue => issue.severity === 'error')) throw new Error(t('error.fixBeforeSave'));
+    const next = mergeSchedules(schedule, incoming, mode, locale);
+    await saveSchedule(next);
+    setSchedule(next); setImportResult(undefined); setSelected(today); setMonth(today.slice(0, 7)); setDetail(false);
   }
   function exportIcs() {
     if (!schedule) return;
@@ -72,7 +78,7 @@ export function App() {
     {loading && <p role="status">{t('loading.schedule')}</p>}
     {busy && <p className="notice" role="status">{t('loading.pdf')}</p>}
     {menu && <section className="panel menu-panel" aria-label={t('menu.label')}><button disabled={busy} onClick={() => input.current?.click()}><FileUp />{t('menu.update')}</button><button onClick={exportIcs}><CalendarArrowDown />{t('menu.export')}</button><p className="muted small">{t('menu.exportHelp')}</p>{schedule && <details><summary>{t('menu.savedImports')}</summary>{(schedule.imports || [schedule.metadata]).map((item, index) => <p key={index} className="small filename">{item.sourceFileName}<br />{formatDate(item.coverageStart, undefined, locale)} – {formatDate(item.coverageEnd, undefined, locale)}<br />{t('menu.importedOn', { date: new Intl.DateTimeFormat(intlLocales[locale]).format(new Date(item.importedAt)) })}</p>)}</details>}</section>}
-    {!loading && !schedule ? <section className="panel onboarding" aria-labelledby="import-title"><div className="hero-icon"><CalendarDays /></div><p className="eyebrow">{t('onboarding.eyebrow')}</p><h2 id="import-title">{t('onboarding.title1')}<br />{t('onboarding.title2')}</h2><p className="intro">{t('onboarding.intro')}</p><button className="primary-action" disabled={busy || !storageReady} onClick={() => input.current?.click()}><FileUp />{t('onboarding.action')}</button><p className="privacy-note"><ShieldCheck />{t('privacy.localFile')}</p></section> : schedule && <>
+    {importResult ? <ImportPreview result={importResult} hasSchedule={!!schedule} locale={locale} onCancel={() => setImportResult(undefined)} onSave={saveImport} /> : !loading && !schedule ? <section className="panel onboarding" aria-labelledby="import-title"><div className="hero-icon"><CalendarDays /></div><p className="eyebrow">{t('onboarding.eyebrow')}</p><h2 id="import-title">{t('onboarding.title1')}<br />{t('onboarding.title2')}</h2><p className="intro">{t('onboarding.intro')}</p><button className="primary-action" disabled={busy || !storageReady} onClick={() => input.current?.click()}><FileUp />{t('onboarding.action')}</button><p className="privacy-note"><ShieldCheck />{t('privacy.localFile')}</p></section> : schedule && <>
       {detail ? <DayDetail date={selected} days={schedule.days} coverageStart={schedule.metadata.coverageStart} coverageEnd={schedule.metadata.coverageEnd} locale={locale} onClose={closeDetail} onDateChange={setSelected} /> : <section className="panel calendar" aria-labelledby="month-title">
         <div className="section-heading"><div><p className="eyebrow">{t('calendar.eyebrow')}</p><h2 id="month-title">{formatDate(first, { month: 'long', year: 'numeric' }, locale)}</h2></div><button onClick={() => { setMonth(today.slice(0, 7)); setSelected(today); }}><Target />{t('calendar.today')}</button></div>
         <div className="toolbar"><p className="muted small">{t('calendar.hint')}</p><div className="actions"><button aria-label={t('calendar.previousMonth')} onClick={() => moveMonth(-1)}><ChevronLeft /></button><button aria-label={t('calendar.nextMonth')} onClick={() => moveMonth(1)}><ChevronRight /></button></div></div>

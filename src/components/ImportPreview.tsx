@@ -16,7 +16,7 @@ export function ImportPreview({ result, hasSchedule, locale, onCancel, onSave }:
   const [error, setError] = useState(''); const [saving, setSaving] = useState(false);
   const validation = useMemo(() => draft ? validateSchedule(draft, locale) : [], [draft, locale]);
   const parserErrors = result.issues.filter(i => i.severity === 'error');
-  const warnings = result.issues.filter(i => i.severity === 'warning');
+  const warnings = [...result.issues, ...validation].filter(i => i.severity === 'warning' && i.code !== 'MISSING');
   const pending = warnings.filter((_, index) => !reviewed.has(String(index)));
   const missing = validation.filter(i => i.code === 'MISSING');
   const errors = validation.filter(i => i.severity === 'error');

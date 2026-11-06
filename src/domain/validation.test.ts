@@ -4,6 +4,15 @@ import { validateSchedule } from './validation';
 import { inferSplitBlocks, normalizeScheduleBlocks } from './schedule';
 describe('schedule validation', () => {
   it('accepts single, overnight, split and all-day records', () => expect(validateSchedule(sampleSchedule())).toEqual([]));
+  it('flags a one-minute work excess for confirmation and preserves its source value', () => {
+    const s = sampleSchedule(); s.days[0].shift!.workedMinutes = 272;
+    expect(validateSchedule(s)).toEqual([expect.objectContaining({ code: 'WORK_ROUNDING', severity: 'warning' })]);
+    expect(s.days[0].shift!.workedMinutes).toBe(272);
+  });
+  it.each([['workedMinutes', 273], ['rrMinutes', 272], ['workedMinutes', -1], ['workedMinutes', 1.5]])('rejects invalid %s = %s', (field, value) => {
+    const s = sampleSchedule(); Object.assign(s.days[0].shift!, { [field]: value });
+    expect(validateSchedule(s)).toContainEqual(expect.objectContaining({ code: 'DURATION', severity: 'error' }));
+  });
   it('rejects duplicates', () => { const s = sampleSchedule(); s.days.push(s.days[0]); expect(validateSchedule(s).some(i => i.code === 'DUPLICATE')).toBe(true); });
   it('reports missing days without converting them to rest', () => { const s = sampleSchedule(); s.days.splice(1, 1); expect(validateSchedule(s)).toEqual([expect.objectContaining({ code: 'MISSING', severity: 'warning', date: '2026-10-02' })]); });
   it('does not infer an overnight end from an earlier clock time', () => { const s = sampleSchedule(); s.days[0].shift!.presenceEnd = '01:31'; expect(validateSchedule(s).some(i => i.code === 'TIME')).toBe(true); });

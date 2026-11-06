@@ -61,6 +61,11 @@ The source PDF does not need to be retained after a successful import. Store sou
 
 ### Preview and validation
 
+Imports without issues save immediately. When parsing or validation finds an issue,
+open the editable preview instead of showing a generic rejection. A work duration
+one minute longer than presence requires explicit confirmation while retaining
+the PDF values; larger discrepancies and invalid RR durations require correction.
+
 Before confirmation, display:
 
 - detected coverage period;

@@ -43,8 +43,14 @@ export function validateSchedule(schedule: Schedule, locale: Locale = 'fr'): Par
         }
       }
     }
-    for (const value of [shift.workedMinutes, shift.rrMinutes]) {
-      if (value !== undefined && (!Number.isInteger(value) || value < 0 || (presence && value > presence[1] - presence[0]))) issue(t('validation.duration'), 'DURATION', d);
+    for (const field of ['workedMinutes', 'rrMinutes'] as const) {
+      const value = shift[field];
+      if (value !== undefined && (!Number.isInteger(value) || value < 0)) issue(t('validation.duration'), 'DURATION', d);
+      else if (value !== undefined && presence && value > presence[1] - presence[0]) {
+        if (field === 'workedMinutes' && value === presence[1] - presence[0] + 1) {
+          issues.push({ severity: 'warning', code: 'WORK_ROUNDING', message: t('validation.workRounding'), date: d });
+        } else issue(t('validation.duration'), 'DURATION', d);
+      }
     }
   }
   for (let d = start; d <= end; d = addDays(d, 1)) if (!seen.has(d)) issues.push({ severity: 'warning', code: 'MISSING', message: t('validation.missing'), date: d });
