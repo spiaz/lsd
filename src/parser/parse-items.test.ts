@@ -61,6 +61,18 @@ describe('operational column layout', () => {
     expect(result.issues).toEqual([]);
     expect(result.schedule!.days[0].shift).toMatchObject({ workedMinutes: 435, rrMinutes: 30, presenceStart: '06:00', presenceEnd: '18:00' });
   });
+  it.each([false, true])('keeps Pay separate from RR with a split work header: %s', splitHeader => {
+    const p = operational([['00:30', 13, 780]]);
+    p.items.push(item('Pay', 857, 800), item('12.34', 855, 780));
+    if (splitHeader) {
+      p.items = p.items.filter(i => i.text !== 'Travail');
+      p.items.push({ text: 'Tps', x: 731, y: 806, width: 17 }, { text: 'Trav.', x: 734, y: 798, width: 22 });
+    }
+    const result = parsePdfItems([p], 'synthetic.pdf');
+    expect(result.issues).toEqual([]);
+    expect(validateSchedule(result.schedule!)).toEqual([]);
+    expect(result.schedule!.days[0].shift).toMatchObject({ workedMinutes: 435, rrMinutes: 30, pay: '12.34' });
+  });
   it('restores the MVP split rule when consecutive trips have a one-hour gap', () => {
     const p = operational();
     const cell = (text: string, column: number, y: number) => ({ text, x: column * 60 + 20 - text.length, y, width: text.length * 2 });
